@@ -34,7 +34,7 @@ prisma/dev.db
 
 # Docker volumes
 docker-data/
-products/
+
 
 # Locally-served product images (temporary, until S3 is wired up)
 /uploads/

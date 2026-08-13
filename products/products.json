@@ -1,0 +1,316 @@
+{
+  "categories": [
+    {
+      "name": "Flavoured Chocolates",
+      "slug": "flavoured-chocolates",
+      "subtitle": "Mini Bites, Medium Bars & Full Bars",
+      "description": "A curated range of handcrafted, playful flavour combinations across mini bites, medium bars and full bars.",
+      "image": "arabian-kunafa-royale.jpg"
+    },
+    {
+      "name": "Kids Chocolates",
+      "slug": "kids-chocolates",
+      "subtitle": "Bars Only",
+      "description": "Fun, tasty & loved by kids — bar-only treats made with the same premium cocoa as everything else.",
+      "image": "galaxy-swirl-bar.jpg"
+    },
+    {
+      "name": "Customized Chocolates",
+      "slug": "customized-chocolates",
+      "subtitle": "Made Just For You",
+      "description": "Personalized for your special moments, just the way you want.",
+      "image": "signature-designer-bar.jpg"
+    },
+    {
+      "name": "Dark Chocolate Bars",
+      "slug": "dark-chocolate-bars",
+      "subtitle": null,
+      "description": "Rich, bold & indulgent dark chocolate bars.",
+      "image": "midnight-noir.jpg"
+    },
+    {
+      "name": "Designer & Theme Chocolate Bars",
+      "slug": "designer-theme-chocolate-bars",
+      "subtitle": "Made For Every Occasion",
+      "description": "Edible-printed and hand-finished theme bars for birthdays, anniversaries and every special occasion.",
+      "image": "love-letter-bar.jpg"
+    }
+  ],
+  "products": [
+    {
+      "name": "Arabian Kunafa Royale",
+      "slug": "arabian-kunafa-royale",
+      "sku": "BN-FLV-001",
+      "price": 399,
+      "category": "Flavoured Chocolates",
+      "description": "Content-A rich chocolate shell filled with creamy pistachio and crispy kunafa (kataifi), giving it the signature combination of crunchy, creamy and nutty textures",
+      "otherInfo": { "barPrice": 399, "bitesPrice": null, "notes": "Bar only", "priceOnRequest": false },
+      "images": ["Arabian Kunafa Royale.jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Golden Crunch",
+      "slug": "golden-crunch",
+      "sku": "BN-FLV-002",
+      "price": 179,
+      "category": "Flavoured Chocolates",
+      "description": "Content-Cornflake Chocolate 🤎✨\nSilky smooth chocolate meets a golden, crispy crunch—creating the perfect bite of rich, irresistible indulgence.",
+      "otherInfo": { "barPrice": 179, "bitesPrice": "15 per piece", "notes": null, "priceOnRequest": false },
+      "images": ["Golden Crunch .jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Cocoa Crisp Burst",
+      "slug": "cocoa-crisp-burst",
+      "sku": "BN-FLV-003",
+      "price": 149,
+      "category": "Flavoured Chocolates",
+      "description": "Content- Delightful crunch in every bite! 🍫✨\nSmooth, rich chocolate loaded with crispy rice pieces for that ultimate light & crunchy texture.",
+      "otherInfo": { "barPrice": 149, "bitesPrice": "15 per piece", "notes": null, "priceOnRequest": false },
+      "images": ["Cocoa Crisp Burst .jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Royal Nut Fusion",
+      "slug": "royal-nut-fusion",
+      "sku": "BN-FLV-004",
+      "price": 219,
+      "category": "Flavoured Chocolates",
+      "description": "Content- A luxurious blend of creamy chocolate, crunchy pistachios & wholesome almonds—crafted to bring the perfect balance of richness and irresistible crunch in every bite. ✨",
+      "otherInfo": { "barPrice": 219, "bitesPrice": "20 per piece", "notes": null, "priceOnRequest": false },
+      "images": ["Royal Nut Fusion.jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Orchid Treasure",
+      "slug": "orchid-treasure",
+      "sku": "BN-FLV-005",
+      "price": 199,
+      "category": "Flavoured Chocolates",
+      "description": "Content - A rich chocolate indulgence packed with the goodness of crunchy nuts and delicious dried fruits.\nA wholesome mix of richness, crunch & fruity delight — made for true chocolate lovers. 🤎🥜🍒",
+      "otherInfo": { "barPrice": 199, "bitesPrice": "20 per piece", "notes": null, "priceOnRequest": false },
+      "images": ["Orchid Treasure .jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Butterscotch Gold",
+      "slug": "butterscotch-gold",
+      "sku": "BN-FLV-006",
+      "price": 179,
+      "category": "Flavoured Chocolates",
+      "description": "Content- A perfect blend of creamy chocolate and rich butterscotch goodness, crafted to melt beautifully in every bite. 🤎\nCrunchy, buttery, and irresistibly indulgent — our Butterscotch Chocolate is made for those who love a little extra sweetness and a lot of flavour.",
+      "otherInfo": { "barPrice": 179, "bitesPrice": "17 per piece", "notes": null, "priceOnRequest": false },
+      "images": ["Butterscotch Gold .jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Orange Citrus Zest",
+      "slug": "orange-citrus-zest",
+      "sku": "BN-FLV-007",
+      "price": 259,
+      "category": "Flavoured Chocolates",
+      "description": "Content - A creamy, velvety milk chocolate infused with the bright, refreshing zest of orange. 🍊✨\nThe perfect balance of smooth sweetness and citrusy freshness in every bite.",
+      "otherInfo": { "barPrice": 259, "bitesPrice": "30 per piece", "notes": null, "priceOnRequest": false },
+      "images": ["Orange Citrus Zest.jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Royal Meetha Leaf",
+      "slug": "royal-meetha-leaf",
+      "sku": "BN-FLV-008",
+      "price": 229,
+      "category": "Flavoured Chocolates",
+      "description": "Content- A delicious twist on a timeless Indian favourite!\nOur Paan Flavour Chocolate blends smooth, creamy chocolate with the refreshing essence of paan for a unique desi-meets-chocolate experience. 💚🍫\nOne bite and you’ll crave another!",
+      "otherInfo": { "barPrice": 229, "bitesPrice": "25 per piece", "notes": null, "priceOnRequest": false },
+      "images": ["Royal Meetha Leaf.jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Silken Milk Classic",
+      "slug": "silken-milk-classic",
+      "sku": "BN-FLV-009",
+      "price": 149,
+      "category": "Flavoured Chocolates",
+      "description": "Content- Pure, silky and irresistibly smooth.\nOur Plain Milk Chocolate is made for those who love the classic taste of rich milk chocolate—simple, comforting and delicious in every bite. ✨",
+      "otherInfo": { "barPrice": 149, "bitesPrice": "15 per piece", "notes": null, "priceOnRequest": false },
+      "images": ["Silken Milk Classic.jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Fennel Fresh Fusion",
+      "slug": "fennel-fresh-fusion",
+      "sku": "BN-FLV-010",
+      "price": 139,
+      "category": "Flavoured Chocolates",
+      "description": "Content- Rich, creamy chocolate infused with the refreshing sweetness and aromatic touch of saunf (fennel) — creating a unique flavour that’s sweet and refreshing.",
+      "otherInfo": { "barPrice": 139, "bitesPrice": "15 per piece", "notes": null, "priceOnRequest": false },
+      "images": ["Fennel Fresh Fusion.jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Saffron Cream Delight",
+      "slug": "saffron-cream-delight",
+      "sku": "BN-FLV-011",
+      "price": 249,
+      "category": "Flavoured Chocolates",
+      "description": "Content-A rich, creamy indulgence inspired by the classic taste of Indian Rabdi.\nSmooth chocolate blended with milky sweetness, aromatic saffron and a delicate touch of pistachio for that irresistible festive flavour. 💛",
+      "otherInfo": { "barPrice": 249, "bitesPrice": "30 per piece", "notes": null, "priceOnRequest": false },
+      "images": ["Saffron Cream Delight.jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Rainbow Berry Pop",
+      "slug": "rainbow-berry-pop",
+      "sku": "BN-KID-001",
+      "price": 169,
+      "category": "Kids Chocolates",
+      "description": "Content - Creamy, dreamy white chocolate loaded with colourful tutti frutti bits—every bite is a little burst of sweetness, crunch & fun! 🌈🍫",
+      "otherInfo": { "barPrice": 169, "bitesPrice": null, "notes": "Bar only", "priceOnRequest": false },
+      "images": ["Rainbow Berry Pop.jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Jelly Joy Bar",
+      "slug": "jelly-joy-bar",
+      "sku": "BN-KID-002",
+      "price": 179,
+      "category": "Kids Chocolates",
+      "description": "Content -Smooth, creamy white chocolate packed with colourful, chewy jelly bites — a fun burst of fruity sweetness in every bite! 💕🍬",
+      "otherInfo": { "barPrice": 179, "bitesPrice": null, "notes": "Bar only", "priceOnRequest": false },
+      "images": ["Jelly Joy Bar.jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Confetti Fruit Crunch",
+      "slug": "confetti-fruit-crunch",
+      "sku": "BN-KID-003",
+      "price": 199,
+      "category": "Kids Chocolates",
+      "description": "Content- Creamy milk chocolate topped with colorful sprinkles and fruity bites — made to bring a little extra joy to every bite! 🌈💖\nPerfect for kids, celebrations, gifting, or simply satisfying your sweet cravings",
+      "otherInfo": { "barPrice": 199, "bitesPrice": null, "notes": "Bar only", "priceOnRequest": false },
+      "images": ["Confetti Fruit Crunch .jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Galaxy Swirl Bar",
+      "slug": "galaxy-swirl-bar",
+      "sku": "BN-KID-004",
+      "price": 139,
+      "category": "Kids Chocolates",
+      "description": "Content -A beautiful swirl of creamy white and rich chocolate, crafted to look as irresistible as it tastes. Every piece is smooth, indulgent, and made to turn your chocolate moments into something special.",
+      "otherInfo": { "barPrice": 139, "bitesPrice": null, "notes": "Bar only", "priceOnRequest": false },
+      "images": ["Galaxy Swirl Bar.jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Cookies Blast",
+      "slug": "cookies-blast",
+      "sku": "BN-KID-005",
+      "price": 229,
+      "category": "Kids Chocolates",
+      "description": "Content -Creamy, dreamy white chocolate loaded with irresistible Oreo crunch! 🤍🖤\nA perfect blend of smooth sweetness and delicious cookie bites in every piece.",
+      "otherInfo": { "barPrice": 229, "bitesPrice": null, "notes": "Bar only", "priceOnRequest": false },
+      "images": ["Cookies Blast.jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Power Seed Crunch",
+      "slug": "power-seed-crunch",
+      "sku": "BN-DRK-001",
+      "price": 249,
+      "category": "Dark Chocolate Bars",
+      "description": "Content -A rich, indulgent blend of smooth dark chocolate, crunchy almonds, wholesome seeds and juicy cranberries. Every bite brings the perfect balance of deep cocoa, crunch & natural sweetness.",
+      "otherInfo": { "barPrice": 249, "bitesPrice": null, "notes": null, "priceOnRequest": false },
+      "images": ["Power Seed Crunch.jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Berry Eclipse",
+      "slug": "berry-eclipse",
+      "sku": "BN-DRK-002",
+      "price": 259,
+      "category": "Dark Chocolate Bars",
+      "description": "Content- A luxurious blend of deep cocoa richness, juicy berry notes, and a delightful bite in every piece. Crafted for those who love their chocolate bold, elegant, and naturally fruity.",
+      "otherInfo": { "barPrice": 259, "bitesPrice": null, "notes": null, "priceOnRequest": false },
+      "images": ["Berry eclipse.jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Forest Harvest",
+      "slug": "forest-harvest",
+      "sku": "BN-DRK-003",
+      "price": 269,
+      "category": "Dark Chocolate Bars",
+      "description": "Content -Rich dark chocolate, loaded with colourful dried fruits and crunchy goodness—crafted to make every bite beautifully indulgent.",
+      "otherInfo": { "barPrice": 269, "bitesPrice": null, "notes": null, "priceOnRequest": false },
+      "images": ["forest Harvest.jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Midnight Noir",
+      "slug": "midnight-noir",
+      "sku": "BN-DRK-004",
+      "price": 199,
+      "category": "Dark Chocolate Bars",
+      "description": "Content -A perfect balance of rich cocoa and gentle sweetness.\nOur Semisweet Chocolate delivers a smooth, velvety bite with just the right touch of sweetness—indulgent, comforting, and beautifully balanced.\nNot too bitter. Not too sweet. Just chocolate perfection. 🤎",
+      "otherInfo": { "barPrice": 199, "bitesPrice": null, "notes": null, "priceOnRequest": false },
+      "images": ["Midnight Noir.jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Cocoa Citrus Royale",
+      "slug": "cocoa-citrus-royale",
+      "sku": "BN-DRK-005",
+      "price": 399,
+      "category": "Dark Chocolate Bars",
+      "description": "Content- A bold blend of rich dark chocolate and zesty orange 🍊🍫\nDeep, intense cocoa notes meet a refreshing citrus twist for a perfectly balanced bite.",
+      "otherInfo": { "barPrice": 399, "bitesPrice": null, "notes": null, "priceOnRequest": false },
+      "images": ["Cocoa Citrus Royale.jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Forever Together Bar",
+      "slug": "forever-together-bar",
+      "sku": "BN-DSG-001",
+      "price": 179,
+      "category": "Designer & Theme Chocolate Bars",
+      "description": "Content-Celebrate your special moments with our luxurious Happy Anniversary Chocolate Bar — beautifully crafted with rich chocolate, crunchy almonds, cashews & pistachios, and finished with a touch of elegance. 🍫💖\nBecause anniversaries deserve something sweeter, more personal, and truly unforgettable. 🥂✨",
+      "otherInfo": { "barPrice": 179, "bitesPrice": null, "notes": null, "priceOnRequest": false },
+      "images": ["Forever Together Bar.jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Love Letter Bar",
+      "slug": "love-letter-bar",
+      "sku": "BN-DSG-002",
+      "price": 399,
+      "category": "Designer & Theme Chocolate Bars",
+      "description": "Content-❤️🍫 Love, Wrapped in Chocolate 🍫❤️\nSay it with chocolate, because some feelings are simply too sweet for words! ✨\nOur “I Love You” Chocolate Bar is made for those special moments when you want to make someone feel truly loved. A rich chocolate treat, beautifully crafted with a heart full of sweetness. 💕🌹\nPerfect for anniversaries, proposals, date nights, or just a little surprise for your special someone. 🥰\nBecause love tastes better with chocolate! 🍫❤️",
+      "otherInfo": { "barPrice": 399, "bitesPrice": null, "notes": null, "priceOnRequest": false },
+      "images": ["Love Letter Bar.jpeg"],
+      "stockQuantity": 50
+    },
+    {
+      "name": "Signature Designer Bar",
+      "slug": "signature-designer-bar",
+      "sku": "BN-CST-001",
+      "price": null,
+      "category": "Customized Chocolates",
+      "description": "Content- ✨ DESIGNER BAR — Crafted to Make Every Moment Special ✨\nA chocolate that’s more than a treat—it’s a little piece of art. 🍫🌸\nBeautifully handcrafted, delicately decorated, and made to add a touch of elegance to every celebration.\n💝 Perfect for birthdays, anniversaries, gifting & special occasions\n🌸 Custom designs available\n🍫 Made in small batches with love\n✨ Premium taste, artistic finish\nTurn your sweetest moments into unforgettable memories with Brown Nation. 🤎",
+      "otherInfo": { "barPrice": null, "bitesPrice": null, "notes": "Custom designs available", "priceOnRequest": true },
+      "images": ["Signature Designer Bar .jpeg", "Signature Designer Bar-2.jpeg"],
+      "stockQuantity": 20
+    },
+    {
+      "name": "Printed Bar",
+      "slug": "printed-bar",
+      "sku": "BN-DSG-004",
+      "price": 359,
+      "category": "Designer & Theme Chocolate Bars",
+      "description": "Content-Our Printed Bar brings elegance, creativity, and delicious indulgence together, making it perfect for birthdays, anniversaries, celebrations, gifting & special occasions. 💝\n🌿 Beautifully Printed\n🍫 Rich & Delicious Chocolate\n🎁 Made for Your Special Moments",
+      "otherInfo": { "barPrice": 359, "bitesPrice": null, "notes": "Customized flavour", "priceOnRequest": false },
+      "images": ["Printed Bar.jpeg"],
+      "stockQuantity": 50
+    }
+  ]
+}
