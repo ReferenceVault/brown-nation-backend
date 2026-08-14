@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
   Param,
@@ -16,6 +17,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { buildPaginatedResult } from '../common/utils/pagination.util';
 import { AuthenticatedUser } from '../common/types/auth.types';
 import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
+import { DeleteUserQueryDto } from './dto/delete-user-query.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UserQueryDto } from './dto/user-query.dto';
 import { UsersService } from './users.service';
@@ -65,5 +67,20 @@ export class UsersController {
       throw new BadRequestException('Admins cannot change their own role or status');
     }
     return this.usersService.updateAdmin(id, dto);
+  }
+
+  @Delete(':id')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Delete a user, optionally deleting their orders too (admin only)' })
+  async remove(
+    @Param('id') id: string,
+    @CurrentUser() admin: AuthenticatedUser,
+    @Query() query: DeleteUserQueryDto,
+  ) {
+    if (id === admin.id) {
+      throw new BadRequestException('Admins cannot delete their own account');
+    }
+    await this.usersService.deleteUser(id, query.deleteOrders ?? false);
+    return { message: 'User deleted successfully' };
   }
 }

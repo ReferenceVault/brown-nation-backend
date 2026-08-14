@@ -102,6 +102,25 @@ export class UsersService {
     });
   }
 
+  /**
+   * Deletes a user. Orders are either removed with the user (cascading to
+   * their items/history/payments) or kept and unlinked (Order.userId -> null),
+   * since Order retains its own denormalized snapshot (shippingAddress, item
+   * name/sku/price) and doesn't need the user row to stay meaningful.
+   */
+  async deleteUser(id: string, deleteOrders: boolean): Promise<void> {
+    await this.findSafeById(id);
+
+    await this.prisma.$transaction(async (tx) => {
+      if (deleteOrders) {
+        await tx.order.deleteMany({ where: { userId: id } });
+      } else {
+        await tx.order.updateMany({ where: { userId: id }, data: { userId: null } });
+      }
+      await tx.user.delete({ where: { id } });
+    });
+  }
+
   async setRefreshTokenHash(id: string, refreshTokenHash: string | null): Promise<void> {
     await this.prisma.user.update({
       where: { id },
