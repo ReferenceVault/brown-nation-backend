@@ -15,7 +15,7 @@ import { AppConfig } from '../config/configuration';
 
 // Folders images may be uploaded into — kept as an allowlist (rather than
 // trusting the raw :folder param) to rule out path traversal.
-const ALLOWED_UPLOAD_FOLDERS = ['products', 'categories'] as const;
+const ALLOWED_UPLOAD_FOLDERS = ['products', 'categories', 'hero'] as const;
 export type UploadFolder = (typeof ALLOWED_UPLOAD_FOLDERS)[number];
 
 @Injectable()

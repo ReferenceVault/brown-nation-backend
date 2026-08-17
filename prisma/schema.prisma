@@ -63,6 +63,11 @@ enum InventoryChangeReason {
   ADJUSTMENT
 }
 
+enum HeroSlideStatus {
+  ACTIVE
+  INACTIVE
+}
+
 // ==============================
 // Models
 // ==============================
@@ -270,4 +275,26 @@ model NewsletterSubscriber {
   createdAt DateTime @default(now())
 
   @@map("newsletter_subscribers")
+}
+
+model HeroSlide {
+  id                String          @id @default(uuid())
+  eyebrow           String
+  headingLine1      String
+  headingLine2      String
+  description       String
+  primaryCtaLabel   String          @default("Shop Now")
+  primaryCtaHref    String          @default("/shop")
+  secondaryCtaLabel String          @default("Explore Flavors")
+  secondaryCtaHref  String          @default("/shop")
+  image             String
+  paletteFrom       String          @default("#f8ece5")
+  paletteTo         String          @default("#eddcd0")
+  order             Int             @default(0)
+  status            HeroSlideStatus @default(ACTIVE)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([status])
+  @@map("hero_slides")
 }

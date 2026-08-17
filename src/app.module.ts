@@ -15,6 +15,7 @@ import { buildLoggerOptions } from './config/logger.config';
 import { PrismaModule } from './database/prisma.module';
 import { EmailModule } from './email/email.module';
 import { HealthModule } from './health/health.module';
+import { HeroSlidesModule } from './hero-slides/hero-slides.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { NewsletterModule } from './newsletter/newsletter.module';
 import { OrdersModule } from './orders/orders.module';
@@ -65,6 +66,7 @@ import { UsersModule } from './users/users.module';
     HealthModule,
     UploadsModule,
     NewsletterModule,
+    HeroSlidesModule,
   ],
   providers: [
     // Global guard chain, applied in order: rate limit -> authenticate -> authorize.

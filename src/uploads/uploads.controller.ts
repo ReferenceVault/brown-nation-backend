@@ -15,7 +15,7 @@ export class UploadsController {
   @Roles(UserRole.ADMIN)
   @Post(':folder')
   @ApiOperation({ summary: 'Upload an image file to local storage (admin only)' })
-  @ApiParam({ name: 'folder', enum: ['products', 'categories'] })
+  @ApiParam({ name: 'folder', enum: ['products', 'categories', 'hero'] })
   async upload(@Param('folder') folder: string, @Req() request: FastifyRequest) {
     return this.uploadsService.uploadImage(folder, request);
   }

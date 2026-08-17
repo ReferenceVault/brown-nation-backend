@@ -37,6 +37,7 @@ async function bootstrap(): Promise<void> {
       .addTag('payments', 'Payments & webhooks')
       .addTag('uploads', 'Local image uploads (temporary, pre-S3)')
       .addTag('newsletter', 'Newsletter subscriptions')
+      .addTag('hero-slides', 'Homepage hero carousel content')
       .addTag('health', 'Health checks')
       .build();
 
