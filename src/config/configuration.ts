@@ -36,9 +36,12 @@ export interface S3Config {
 }
 
 export interface PaymentConfig {
-  provider: 'mock' | 'stripe';
+  provider: 'mock' | 'stripe' | 'razorpay';
   stripeSecretKey?: string;
   stripeWebhookSecret?: string;
+  razorpayKeyId?: string;
+  razorpayKeySecret?: string;
+  razorpayWebhookSecret?: string;
 }
 
 export interface EmailConfig {
@@ -91,9 +94,12 @@ export default () => ({
     publicUrl: process.env.S3_PUBLIC_URL ?? '',
   } satisfies S3Config,
   payment: {
-    provider: (process.env.PAYMENT_PROVIDER ?? 'mock') as 'mock' | 'stripe',
+    provider: (process.env.PAYMENT_PROVIDER ?? 'mock') as 'mock' | 'stripe' | 'razorpay',
     stripeSecretKey: process.env.STRIPE_SECRET_KEY,
     stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+    razorpayKeyId: process.env.RAZORPAY_KEY_ID,
+    razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET,
+    razorpayWebhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET,
   } satisfies PaymentConfig,
   email: {
     provider: (process.env.EMAIL_PROVIDER ?? 'mock') as 'mock' | 'smtp',

@@ -6,6 +6,7 @@ import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 import { PAYMENT_PROVIDER } from './interfaces/payment-provider.interface';
 import { MockPaymentProvider } from './providers/mock-payment.provider';
+import { RazorpayPaymentProvider } from './providers/razorpay-payment.provider';
 import { StripePaymentProvider } from './providers/stripe-payment.provider';
 
 @Module({
@@ -13,17 +14,21 @@ import { StripePaymentProvider } from './providers/stripe-payment.provider';
   providers: [
     MockPaymentProvider,
     StripePaymentProvider,
+    RazorpayPaymentProvider,
     {
       provide: PAYMENT_PROVIDER,
       useFactory: (
         configService: ConfigService,
         mock: MockPaymentProvider,
         stripe: StripePaymentProvider,
+        razorpay: RazorpayPaymentProvider,
       ) => {
         const paymentConfig = configService.get<PaymentConfig>('payment')!;
-        return paymentConfig.provider === 'stripe' ? stripe : mock;
+        if (paymentConfig.provider === 'stripe') return stripe;
+        if (paymentConfig.provider === 'razorpay') return razorpay;
+        return mock;
       },
-      inject: [ConfigService, MockPaymentProvider, StripePaymentProvider],
+      inject: [ConfigService, MockPaymentProvider, StripePaymentProvider, RazorpayPaymentProvider],
     },
     PaymentsService,
   ],

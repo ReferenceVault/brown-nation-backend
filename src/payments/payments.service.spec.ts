@@ -30,6 +30,7 @@ describe('PaymentsService', () => {
   beforeEach(() => {
     provider = {
       name: 'MOCK',
+      webhookSignatureHeader: 'x-mock-signature',
       createPaymentIntent: jest.fn(),
       parseWebhook: jest.fn(),
     };

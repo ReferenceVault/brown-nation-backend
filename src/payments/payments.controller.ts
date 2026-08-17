@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Body,
   Controller,
   HttpCode,
   HttpStatus,
@@ -15,6 +16,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
 import { RawResponse } from '../common/decorators/raw-response.decorator';
 import { AuthenticatedUser } from '../common/types/auth.types';
+import { VerifyPaymentDto } from './dto/verify-payment.dto';
 import { PaymentsService } from './payments.service';
 
 @ApiTags('payments')
@@ -29,6 +31,21 @@ export class PaymentsController {
     return this.paymentsService.initiatePayment(user, orderId);
   }
 
+  @ApiBearerAuth('access-token')
+  @Post(':orderId/verify')
+  @ApiOperation({ summary: "Verify a client-reported payment completion (e.g. Razorpay Checkout's success callback)" })
+  async verify(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('orderId') orderId: string,
+    @Body() dto: VerifyPaymentDto,
+  ) {
+    return this.paymentsService.verifyPayment(user, orderId, {
+      razorpay_order_id: dto.razorpay_order_id,
+      razorpay_payment_id: dto.razorpay_payment_id,
+      razorpay_signature: dto.razorpay_signature,
+    });
+  }
+
   @Public()
   @RawResponse()
   @HttpCode(HttpStatus.OK)
@@ -40,7 +57,7 @@ export class PaymentsController {
       throw new BadRequestException('Missing request body');
     }
 
-    const signature = request.headers['stripe-signature'];
+    const signature = request.headers[this.paymentsService.webhookSignatureHeader];
     try {
       await this.paymentsService.handleWebhook(
         rawBody,

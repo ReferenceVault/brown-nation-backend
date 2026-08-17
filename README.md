@@ -18,7 +18,7 @@ REST API covering authentication, product catalog, shopping cart, orders, invent
 | Logging | Pino (`nestjs-pino`), structured JSON, redacted secrets |
 | Security | `@fastify/helmet`, CORS via env, `@nestjs/throttler` rate limiting |
 | Object storage | S3-compatible abstraction (AWS S3 / Cloudflare R2 / MinIO) |
-| Payments | Provider abstraction — Mock (dev) and Stripe |
+| Payments | Provider abstraction — Mock (dev), Stripe, and Razorpay |
 | Testing | Jest (unit), Jest + Supertest (E2E), separate test database |
 
 > **Note on versions:** TypeScript 7, Prisma 7 and ESLint 10's newest peer chain were checked against the rest of the toolchain before pinning. `ts-jest` and `typescript-eslint` currently hard-cap support below TypeScript 6.1, and Prisma 7 changes the generator/client API significantly, so this project pins **TypeScript 5.9.3** and **Prisma 6.19.3** — the newest versions that are still fully interoperable with the whole toolchain — while everything else (NestJS, ESLint, Fastify, Jest, etc.) is on its true latest release.
@@ -43,7 +43,7 @@ src/
 ├── cart/
 ├── inventory/              # atomic stock reservation/release
 ├── orders/                 # transactional order creation, status lifecycle
-├── payments/                # PaymentProvider abstraction (Mock/Stripe) + webhook handling
+├── payments/                # PaymentProvider abstraction (Mock/Stripe/Razorpay) + webhook handling
 ├── email/                   # EmailProvider abstraction (Mock/SMTP)
 └── health/                  # liveness + DB connectivity check
 ```
@@ -159,6 +159,7 @@ Run `npm run prisma:migrate:deploy` before starting in production. Set `SWAGGER_
 - Set `CORS_ORIGIN` to your actual frontend origin(s) — the app refuses `origin: *` when combined with credentials.
 - Point `S3_*` at your real bucket (AWS S3 or Cloudflare R2 both work unmodified; only the endpoint/credentials change).
 - For Stripe: set `PAYMENT_PROVIDER=stripe`, `STRIPE_SECRET_KEY`, and `STRIPE_WEBHOOK_SECRET`, and point Stripe's webhook at `POST /payments/webhook`.
+- For Razorpay: set `PAYMENT_PROVIDER=razorpay`, `RAZORPAY_KEY_ID`, and `RAZORPAY_KEY_SECRET` (from [Dashboard > API Keys](https://dashboard.razorpay.com/app/keys)), plus `RAZORPAY_WEBHOOK_SECRET` (set when you add `POST /payments/webhook` as a webhook URL under Dashboard > Webhooks, subscribed to at least the `payment.captured` and `payment.failed` events). Order amounts are converted to paise automatically.
 - `npm audit` currently flags a transitive `js-yaml` advisory pulled in by `@nestjs/swagger`'s Swagger UI assets (YAML parsing DoS). This app never parses untrusted YAML, so it's not exploitable here, but keep an eye on upstream `@nestjs/swagger` for the fix.
 - The health endpoint (`/health`) only checks DB connectivity — point your orchestrator's liveness/readiness probe at it.
 

@@ -88,7 +88,7 @@ class EnvironmentVariables {
   @IsString()
   S3_PUBLIC_URL: string;
 
-  @IsIn(['mock', 'stripe'])
+  @IsIn(['mock', 'stripe', 'razorpay'])
   PAYMENT_PROVIDER = 'mock';
 
   @IsOptional()
@@ -98,6 +98,18 @@ class EnvironmentVariables {
   @IsOptional()
   @IsString()
   STRIPE_WEBHOOK_SECRET?: string;
+
+  @IsOptional()
+  @IsString()
+  RAZORPAY_KEY_ID?: string;
+
+  @IsOptional()
+  @IsString()
+  RAZORPAY_KEY_SECRET?: string;
+
+  @IsOptional()
+  @IsString()
+  RAZORPAY_WEBHOOK_SECRET?: string;
 
   @IsIn(['mock', 'smtp'])
   EMAIL_PROVIDER = 'mock';

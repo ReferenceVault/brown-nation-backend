@@ -14,6 +14,7 @@ import {
 @Injectable()
 export class StripePaymentProvider implements PaymentProvider {
   readonly name = 'STRIPE';
+  readonly webhookSignatureHeader = 'stripe-signature';
   private readonly logger = new Logger('StripePaymentProvider');
   private readonly stripe: Stripe | null;
   private readonly config: PaymentConfig;

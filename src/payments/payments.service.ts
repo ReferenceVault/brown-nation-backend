@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   HttpStatus,
   Inject,
@@ -6,12 +7,16 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { OrderStatus, Payment, PaymentStatus } from '@prisma/client';
+import { Order, OrderStatus, Payment, PaymentStatus } from '@prisma/client';
 
 import { ErrorCode } from '../common/constants/error-codes.constant';
 import { AppException } from '../common/exceptions/app.exception';
 import { PrismaService } from '../database/prisma.service';
-import { PAYMENT_PROVIDER, PaymentProvider } from './interfaces/payment-provider.interface';
+import {
+  PAYMENT_PROVIDER,
+  PaymentProvider,
+  WebhookEvent,
+} from './interfaces/payment-provider.interface';
 
 @Injectable()
 export class PaymentsService {
@@ -21,6 +26,11 @@ export class PaymentsService {
     @Inject(PAYMENT_PROVIDER) private readonly provider: PaymentProvider,
     private readonly prisma: PrismaService,
   ) {}
+
+  /** HTTP header the active provider's webhook signature arrives on. */
+  get webhookSignatureHeader(): string {
+    return this.provider.webhookSignatureHeader;
+  }
 
   async initiatePayment(
     requester: { id: string; role: string },
@@ -70,13 +80,56 @@ export class PaymentsService {
     if (!event) {
       return;
     }
+    await this.applyPaymentEvent(event);
+  }
 
+  /**
+   * Confirms payment immediately from client-reported checkout success params
+   * (e.g. Razorpay Checkout's handler callback), rather than waiting on the
+   * async webhook — necessary in local/private deployments the provider's
+   * webhook can't reach. Falls back to the webhook as the durable source of
+   * truth in production; this is a fast-path, not a replacement.
+   */
+  async verifyPayment(
+    requester: { id: string; role: string },
+    orderId: string,
+    params: Record<string, string>,
+  ): Promise<Order> {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+    if (requester.role !== 'ADMIN' && order.userId !== requester.id) {
+      throw new ForbiddenException('You may only verify payment for your own orders');
+    }
+
+    if (!this.provider.verifyClientPayment) {
+      throw new BadRequestException(
+        `${this.provider.name} does not support client-side payment verification`,
+      );
+    }
+
+    let event: WebhookEvent | null;
+    try {
+      event = this.provider.verifyClientPayment(params);
+    } catch (error) {
+      throw new BadRequestException((error as Error).message);
+    }
+
+    if (event) {
+      await this.applyPaymentEvent(event);
+    }
+
+    return this.prisma.order.findUniqueOrThrow({ where: { id: orderId } });
+  }
+
+  private async applyPaymentEvent(event: WebhookEvent): Promise<void> {
     const payment = await this.prisma.payment.findFirst({
       where: { providerPaymentId: event.providerPaymentId },
     });
 
     if (!payment) {
-      this.logger.warn(`Webhook for unknown payment: ${event.providerPaymentId}`);
+      this.logger.warn(`Payment event for unknown payment: ${event.providerPaymentId}`);
       return;
     }
 

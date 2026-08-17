@@ -17,6 +17,7 @@ import {
 @Injectable()
 export class MockPaymentProvider implements PaymentProvider {
   readonly name = 'MOCK';
+  readonly webhookSignatureHeader = 'x-mock-signature';
   private readonly logger = new Logger('MockPaymentProvider');
 
   async createPaymentIntent(params: CreatePaymentIntentParams): Promise<PaymentIntentResult> {
