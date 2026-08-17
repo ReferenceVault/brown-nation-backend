@@ -16,6 +16,7 @@ import { PrismaModule } from './database/prisma.module';
 import { EmailModule } from './email/email.module';
 import { HealthModule } from './health/health.module';
 import { InventoryModule } from './inventory/inventory.module';
+import { NewsletterModule } from './newsletter/newsletter.module';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
 import { ProductsModule } from './products/products.module';
@@ -63,6 +64,7 @@ import { UsersModule } from './users/users.module';
     PaymentsModule,
     HealthModule,
     UploadsModule,
+    NewsletterModule,
   ],
   providers: [
     // Global guard chain, applied in order: rate limit -> authenticate -> authorize.

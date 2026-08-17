@@ -263,3 +263,11 @@ model InventoryLog {
   @@index([productId])
   @@map("inventory_logs")
 }
+
+model NewsletterSubscriber {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("newsletter_subscribers")
+}
