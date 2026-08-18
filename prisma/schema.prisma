@@ -68,6 +68,12 @@ enum HeroSlideStatus {
   INACTIVE
 }
 
+enum EnquiryStatus {
+  NEW
+  READ
+  RESOLVED
+}
+
 // ==============================
 // Models
 // ==============================
@@ -297,4 +303,17 @@ model HeroSlide {
 
   @@index([status])
   @@map("hero_slides")
+}
+
+model ContactEnquiry {
+  id        String        @id @default(uuid())
+  name      String
+  email     String
+  message   String
+  status    EnquiryStatus @default(NEW)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([status])
+  @@map("contact_enquiries")
 }

@@ -45,12 +45,15 @@ export interface PaymentConfig {
 }
 
 export interface EmailConfig {
-  provider: 'mock' | 'smtp';
+  provider: 'mock' | 'smtp' | 'resend';
   smtpHost?: string;
   smtpPort?: number;
   smtpUser?: string;
   smtpPassword?: string;
   smtpFrom: string;
+  resendApiKey?: string;
+  resendFromEmail: string;
+  contactNotificationEmail: string;
 }
 
 export default () => ({
@@ -102,11 +105,15 @@ export default () => ({
     razorpayWebhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET,
   } satisfies PaymentConfig,
   email: {
-    provider: (process.env.EMAIL_PROVIDER ?? 'mock') as 'mock' | 'smtp',
+    provider: (process.env.EMAIL_PROVIDER ?? 'mock') as 'mock' | 'smtp' | 'resend',
     smtpHost: process.env.SMTP_HOST,
     smtpPort: process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : undefined,
     smtpUser: process.env.SMTP_USER,
     smtpPassword: process.env.SMTP_PASSWORD,
     smtpFrom: process.env.SMTP_FROM ?? 'no-reply@brownnation.com',
+    resendApiKey: process.env.RESEND_API_KEY,
+    resendFromEmail: process.env.RESEND_FROM_EMAIL ?? 'no-reply@brownnation.in',
+    contactNotificationEmail:
+      process.env.CONTACT_NOTIFICATION_EMAIL ?? 'brownnation.choco@gmail.com',
   } satisfies EmailConfig,
 });

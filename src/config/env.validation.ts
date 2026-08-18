@@ -111,7 +111,7 @@ class EnvironmentVariables {
   @IsString()
   RAZORPAY_WEBHOOK_SECRET?: string;
 
-  @IsIn(['mock', 'smtp'])
+  @IsIn(['mock', 'smtp', 'resend'])
   EMAIL_PROVIDER = 'mock';
 
   @IsOptional()
@@ -133,6 +133,18 @@ class EnvironmentVariables {
   @IsOptional()
   @IsString()
   SMTP_FROM?: string;
+
+  @IsOptional()
+  @IsString()
+  RESEND_API_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  RESEND_FROM_EMAIL?: string;
+
+  @IsOptional()
+  @IsString()
+  CONTACT_NOTIFICATION_EMAIL?: string;
 }
 
 export function validate(config: Record<string, unknown>) {
