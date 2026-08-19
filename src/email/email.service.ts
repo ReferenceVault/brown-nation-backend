@@ -70,4 +70,64 @@ export class EmailService {
       html: `<p>Hi ${name},</p><p>Thanks for reaching out to Brown Nation! We've received your message and will get back to you within 24-48 hours.</p><p><a href="${this.frontendUrl}">Visit Brown Nation</a></p>`,
     });
   }
+
+  async sendOrderConfirmationEmail(order: OrderEmailDetails): Promise<void> {
+    const orderLink = `${this.frontendUrl}/account/orders/${order.orderId}`;
+    const itemsText = order.items
+      .map(
+        (item) =>
+          `- ${item.productName} x${item.quantity} — ${formatMoney(item.totalPrice, order.currency)}`,
+      )
+      .join('\n');
+    const itemsHtml = order.items
+      .map(
+        (item) =>
+          `<li>${item.productName} &times; ${item.quantity} — ${formatMoney(item.totalPrice, order.currency)}</li>`,
+      )
+      .join('');
+
+    await this.provider.send({
+      to: order.customerEmail,
+      subject: `Order confirmed — #${order.orderNumber}`,
+      text: `Hi ${order.customerName},\n\nThanks for your order! We've received your payment and your order #${order.orderNumber} is confirmed.\n\n${itemsText}\n\nTotal: ${formatMoney(order.totalAmount, order.currency)}\n\nTrack your order: ${orderLink}\n\nThanks for choosing Brown Nation!`,
+      html: `<p>Hi ${order.customerName},</p><p>Thanks for your order! We've received your payment and your order <strong>#${order.orderNumber}</strong> is confirmed.</p><ul>${itemsHtml}</ul><p><strong>Total: ${formatMoney(order.totalAmount, order.currency)}</strong></p><p><a href="${orderLink}">Track your order</a></p><p>Thanks for choosing Brown Nation!</p>`,
+    });
+  }
+
+  async sendOrderNotificationEmail(order: OrderEmailDetails): Promise<void> {
+    const itemsText = order.items
+      .map(
+        (item) =>
+          `- ${item.productName} x${item.quantity} — ${formatMoney(item.totalPrice, order.currency)}`,
+      )
+      .join('\n');
+    const itemsHtml = order.items
+      .map(
+        (item) =>
+          `<li>${item.productName} &times; ${item.quantity} — ${formatMoney(item.totalPrice, order.currency)}</li>`,
+      )
+      .join('');
+
+    await this.provider.send({
+      to: this.contactNotificationEmail,
+      subject: `New paid order — #${order.orderNumber}`,
+      text: `A new order has been paid.\n\nOrder: #${order.orderNumber}\nCustomer: ${order.customerName} (${order.customerEmail})\n\n${itemsText}\n\nTotal: ${formatMoney(order.totalAmount, order.currency)}`,
+      html: `<p>A new order has been paid.</p><p><strong>Order:</strong> #${order.orderNumber}<br><strong>Customer:</strong> ${order.customerName} (${order.customerEmail})</p><ul>${itemsHtml}</ul><p><strong>Total: ${formatMoney(order.totalAmount, order.currency)}</strong></p>`,
+    });
+  }
+}
+
+type OrderEmailDetails = {
+  orderId: string;
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  totalAmount: string;
+  currency: string;
+  items: { productName: string; quantity: number; totalPrice: string }[];
+};
+
+function formatMoney(amount: string, currency: string): string {
+  const formatted = Number(amount).toFixed(2);
+  return currency === 'INR' ? `₹${formatted}` : `${currency} ${formatted}`;
 }

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { PaymentConfig } from '../config/configuration';
+import { EmailModule } from '../email/email.module';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 import { PAYMENT_PROVIDER } from './interfaces/payment-provider.interface';
@@ -10,6 +11,7 @@ import { RazorpayPaymentProvider } from './providers/razorpay-payment.provider';
 import { StripePaymentProvider } from './providers/stripe-payment.provider';
 
 @Module({
+  imports: [EmailModule],
   controllers: [PaymentsController],
   providers: [
     MockPaymentProvider,

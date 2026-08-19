@@ -7,11 +7,12 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { Order, OrderStatus, Payment, PaymentStatus } from '@prisma/client';
+import { Order, OrderStatus, Payment, PaymentStatus, Prisma } from '@prisma/client';
 
 import { ErrorCode } from '../common/constants/error-codes.constant';
 import { AppException } from '../common/exceptions/app.exception';
 import { PrismaService } from '../database/prisma.service';
+import { EmailService } from '../email/email.service';
 import {
   PAYMENT_PROVIDER,
   PaymentProvider,
@@ -25,6 +26,7 @@ export class PaymentsService {
   constructor(
     @Inject(PAYMENT_PROVIDER) private readonly provider: PaymentProvider,
     private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
   ) {}
 
   /** HTTP header the active provider's webhook signature arrives on. */
@@ -146,7 +148,10 @@ export class PaymentsService {
   }
 
   private async markOrderPaid(orderId: string): Promise<void> {
-    const order = await this.prisma.order.findUniqueOrThrow({ where: { id: orderId } });
+    const order = await this.prisma.order.findUniqueOrThrow({
+      where: { id: orderId },
+      include: { items: true, user: { select: { email: true } } },
+    });
 
     await this.prisma.order.update({
       where: { id: orderId },
@@ -160,6 +165,49 @@ export class PaymentsService {
       await this.prisma.orderStatusHistory.create({
         data: { orderId, status: OrderStatus.CONFIRMED, note: 'Payment received' },
       });
+    }
+
+    await this.sendOrderPaidEmails(order);
+  }
+
+  /**
+   * Best-effort: the payment is already confirmed and recorded, so a
+   * transient email provider issue shouldn't affect the payment flow —
+   * just log it and move on.
+   */
+  private async sendOrderPaidEmails(
+    order: Prisma.OrderGetPayload<{
+      include: { items: true; user: { select: { email: true } } };
+    }>,
+  ): Promise<void> {
+    const shippingAddress = order.shippingAddress as { fullName?: string } | null;
+    const customerName = shippingAddress?.fullName ?? 'there';
+    const customerEmail = order.user?.email;
+
+    if (!customerEmail) {
+      this.logger.warn(`Order ${order.id} has no associated user email; skipping order emails`);
+      return;
+    }
+
+    const emailDetails = {
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      customerName,
+      customerEmail,
+      totalAmount: order.totalAmount.toString(),
+      currency: order.currency,
+      items: order.items.map((item) => ({
+        productName: item.productName,
+        quantity: item.quantity,
+        totalPrice: item.totalPrice.toString(),
+      })),
+    };
+
+    try {
+      await this.emailService.sendOrderConfirmationEmail(emailDetails);
+      await this.emailService.sendOrderNotificationEmail(emailDetails);
+    } catch (error) {
+      this.logger.error(`Failed to send order-paid emails for ${order.id}`, error as Error);
     }
   }
 }
