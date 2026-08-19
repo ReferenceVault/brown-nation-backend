@@ -21,6 +21,7 @@ const JWT_CONFIG = {
   accessExpiresIn: '15m',
   refreshExpiresIn: '7d',
   passwordResetTokenTtlMinutes: 30,
+  emailVerificationTokenTtlMinutes: 1440,
 };
 
 function buildUser(overrides: Partial<Record<string, unknown>> = {}) {
@@ -51,10 +52,11 @@ describe('AuthService', () => {
   let jwtService: { signAsync: jest.Mock; verifyAsync: jest.Mock };
   let prisma: {
     passwordResetToken: Record<string, jest.Mock>;
+    emailVerificationToken: Record<string, jest.Mock>;
     user: Record<string, jest.Mock>;
     $transaction: jest.Mock;
   };
-  let emailService: { sendPasswordResetEmail: jest.Mock };
+  let emailService: { sendPasswordResetEmail: jest.Mock; sendVerificationEmail: jest.Mock };
   let service: AuthService;
 
   beforeEach(() => {
@@ -75,10 +77,19 @@ describe('AuthService', () => {
         findUnique: jest.fn(),
         update: jest.fn(),
       },
+      emailVerificationToken: {
+        deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
+        create: jest.fn().mockResolvedValue({ id: 'verify-record-id' }),
+        findUnique: jest.fn(),
+        update: jest.fn(),
+      },
       user: { update: jest.fn() },
       $transaction: jest.fn(async (arg: unknown) => (Array.isArray(arg) ? Promise.all(arg) : arg)),
     };
-    emailService = { sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined) };
+    emailService = {
+      sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
+      sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
+    };
 
     const configService = {
       get: jest.fn().mockReturnValue(JWT_CONFIG),
@@ -123,6 +134,10 @@ describe('AuthService', () => {
       expect(argon2.hash).toHaveBeenCalledWith('CorrectPass123', { type: 'argon2id' });
       expect(result.tokens.accessToken).toBe('signed-token');
       expect(usersService.setRefreshTokenHash).toHaveBeenCalledWith('user-1', expect.any(String));
+      expect(emailService.sendVerificationEmail).toHaveBeenCalledWith(
+        'jane@example.com',
+        expect.stringContaining('verify-record-id.'),
+      );
     });
   });
 
@@ -249,6 +264,93 @@ describe('AuthService', () => {
       await service.resetPassword('record-id.secret', 'NewPass123');
 
       expect(prisma.$transaction).toHaveBeenCalled();
+    });
+  });
+
+  describe('verifyEmail', () => {
+    it('rejects a malformed token', async () => {
+      await expect(service.verifyEmail('not-a-composite-token')).rejects.toBeInstanceOf(
+        AppException,
+      );
+    });
+
+    it('rejects when the token record cannot be found', async () => {
+      prisma.emailVerificationToken.findUnique.mockResolvedValue(null);
+
+      await expect(service.verifyEmail('record-id.secret')).rejects.toBeInstanceOf(AppException);
+    });
+
+    it('rejects an already-used token', async () => {
+      prisma.emailVerificationToken.findUnique.mockResolvedValue({
+        id: 'record-id',
+        userId: 'user-1',
+        tokenHash: 'hashed:secret',
+        usedAt: new Date(),
+        expiresAt: new Date(Date.now() + 60_000),
+      });
+
+      await expect(service.verifyEmail('record-id.secret')).rejects.toBeInstanceOf(AppException);
+    });
+
+    it('rejects an expired token', async () => {
+      prisma.emailVerificationToken.findUnique.mockResolvedValue({
+        id: 'record-id',
+        userId: 'user-1',
+        tokenHash: 'hashed:secret',
+        usedAt: null,
+        expiresAt: new Date(Date.now() - 60_000),
+      });
+
+      await expect(service.verifyEmail('record-id.secret')).rejects.toBeInstanceOf(AppException);
+    });
+
+    it('marks the user verified and the token used when everything checks out', async () => {
+      prisma.emailVerificationToken.findUnique.mockResolvedValue({
+        id: 'record-id',
+        userId: 'user-1',
+        tokenHash: 'hashed:secret',
+        usedAt: null,
+        expiresAt: new Date(Date.now() + 60_000),
+      });
+
+      await service.verifyEmail('record-id.secret');
+
+      expect(prisma.$transaction).toHaveBeenCalled();
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: { isEmailVerified: true },
+      });
+    });
+  });
+
+  describe('resendVerification', () => {
+    it('does nothing for an unknown email', async () => {
+      usersService.findByEmailWithCredentials.mockResolvedValue(null);
+
+      await service.resendVerification('nobody@example.com');
+
+      expect(emailService.sendVerificationEmail).not.toHaveBeenCalled();
+    });
+
+    it('does nothing when the email is already verified', async () => {
+      usersService.findByEmailWithCredentials.mockResolvedValue(
+        buildUser({ isEmailVerified: true }),
+      );
+
+      await service.resendVerification('jane@example.com');
+
+      expect(emailService.sendVerificationEmail).not.toHaveBeenCalled();
+    });
+
+    it('sends a new verification email for an unverified account', async () => {
+      usersService.findByEmailWithCredentials.mockResolvedValue(buildUser());
+
+      await service.resendVerification('jane@example.com');
+
+      expect(emailService.sendVerificationEmail).toHaveBeenCalledWith(
+        'jane@example.com',
+        expect.stringContaining('verify-record-id.'),
+      );
     });
   });
 });

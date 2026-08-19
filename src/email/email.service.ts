@@ -29,6 +29,17 @@ export class EmailService {
     });
   }
 
+  async sendVerificationEmail(to: string, verificationToken: string): Promise<void> {
+    const verifyLink = `${this.frontendUrl}/verify-email?token=${verificationToken}`;
+
+    await this.provider.send({
+      to,
+      subject: 'Verify your email — Brown Nation',
+      text: `Welcome to Brown Nation! Please verify your email address by visiting the link below:\n\n${verifyLink}\n\nIf you did not create this account, you can safely ignore this email.`,
+      html: `<p>Welcome to Brown Nation!</p><p><a href="${verifyLink}">Click here to verify your email address</a></p><p>If you did not create this account, you can safely ignore this email.</p>`,
+    });
+  }
+
   async sendNewsletterWelcomeEmail(to: string): Promise<void> {
     await this.provider.send({
       to,

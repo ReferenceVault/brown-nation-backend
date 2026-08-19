@@ -23,6 +23,7 @@ export interface JwtConfig {
   accessExpiresIn: string;
   refreshExpiresIn: string;
   passwordResetTokenTtlMinutes: number;
+  emailVerificationTokenTtlMinutes: number;
 }
 
 export interface S3Config {
@@ -84,6 +85,10 @@ export default () => ({
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? '7d',
     passwordResetTokenTtlMinutes: parseInt(
       process.env.PASSWORD_RESET_TOKEN_TTL_MINUTES ?? '30',
+      10,
+    ),
+    emailVerificationTokenTtlMinutes: parseInt(
+      process.env.EMAIL_VERIFICATION_TOKEN_TTL_MINUTES ?? '1440',
       10,
     ),
   } satisfies JwtConfig,

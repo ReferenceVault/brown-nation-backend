@@ -58,6 +58,9 @@ export class AuthService {
 
     const tokens = await this.issueTokens({ id: user.id, email: user.email, role: user.role });
     this.logger.log(`New user signed up: ${user.id}`);
+
+    await this.sendVerificationEmail(user.id, user.email);
+
     return { user, tokens };
   }
 
@@ -199,6 +202,87 @@ export class AuthService {
     ]);
 
     this.logger.log(`Password reset completed for user: ${record.userId}`);
+  }
+
+  async verifyEmail(compositeToken: string): Promise<void> {
+    const [recordId, rawSecret] = compositeToken.split('.');
+    if (!recordId || !rawSecret) {
+      throw new AppException(
+        ErrorCode.INVALID_VERIFICATION_TOKEN,
+        'Invalid or expired verification token',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const record = await this.prisma.emailVerificationToken.findUnique({
+      where: { id: recordId },
+    });
+    if (!record || record.usedAt || record.expiresAt < new Date()) {
+      throw new AppException(
+        ErrorCode.INVALID_VERIFICATION_TOKEN,
+        'Invalid or expired verification token',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const matches = await argon2.verify(record.tokenHash, rawSecret);
+    if (!matches) {
+      throw new AppException(
+        ErrorCode.INVALID_VERIFICATION_TOKEN,
+        'Invalid or expired verification token',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: record.userId },
+        data: { isEmailVerified: true },
+      }),
+      this.prisma.emailVerificationToken.update({
+        where: { id: record.id },
+        data: { usedAt: new Date() },
+      }),
+    ]);
+
+    this.logger.log(`Email verified for user: ${record.userId}`);
+  }
+
+  async resendVerification(email: string): Promise<void> {
+    const user = await this.usersService.findByEmailWithCredentials(email);
+
+    // Always behave the same way whether or not the account exists, to avoid
+    // leaking which emails are registered.
+    if (!user || user.isEmailVerified) {
+      return;
+    }
+
+    await this.sendVerificationEmail(user.id, user.email);
+  }
+
+  private async sendVerificationEmail(userId: string, email: string): Promise<void> {
+    await this.prisma.emailVerificationToken.deleteMany({
+      where: { userId, usedAt: null },
+    });
+
+    const rawSecret = randomBytes(32).toString('hex');
+    const tokenHash = await argon2.hash(rawSecret, { type: argon2.argon2id });
+    const expiresAt = new Date(
+      Date.now() + this.jwtConfig.emailVerificationTokenTtlMinutes * 60 * 1000,
+    );
+
+    const record = await this.prisma.emailVerificationToken.create({
+      data: { userId, tokenHash, expiresAt },
+    });
+
+    const compositeToken = `${record.id}.${rawSecret}`;
+    try {
+      await this.emailService.sendVerificationEmail(email, compositeToken);
+    } catch (err) {
+      // Don't block signup/resend on a transient email provider failure.
+      const reason = err instanceof Error ? err.message : String(err);
+      this.logger.warn(`Failed to send verification email to ${email}: ${reason}`);
+    }
   }
 
   private async issueTokens(user: {

@@ -8,8 +8,10 @@ import { AuthService } from './auth.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { SignupDto } from './dto/signup.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
 import { UsersService } from '../users/users.service';
 
 const AUTH_THROTTLE = { default: { limit: 5, ttl: 60_000 } };
@@ -77,6 +79,29 @@ export class AuthController {
   async resetPassword(@Body() dto: ResetPasswordDto) {
     await this.authService.resetPassword(dto.token, dto.newPassword);
     return { message: 'Password has been reset successfully' };
+  }
+
+  @Public()
+  @Throttle(AUTH_THROTTLE)
+  @HttpCode(HttpStatus.OK)
+  @Post('verify-email')
+  @ApiOperation({ summary: 'Verify email using a token from the verification email' })
+  async verifyEmail(@Body() dto: VerifyEmailDto) {
+    await this.authService.verifyEmail(dto.token);
+    return { message: 'Email verified successfully' };
+  }
+
+  @Public()
+  @Throttle(AUTH_THROTTLE)
+  @HttpCode(HttpStatus.OK)
+  @Post('resend-verification')
+  @ApiOperation({ summary: 'Resend the email verification link' })
+  async resendVerification(@Body() dto: ResendVerificationDto) {
+    await this.authService.resendVerification(dto.email);
+    return {
+      message:
+        'If an account with that email exists and is unverified, a verification link has been sent.',
+    };
   }
 
   @ApiBearerAuth('access-token')
