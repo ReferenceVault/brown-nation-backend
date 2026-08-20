@@ -1,6 +1,6 @@
 import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
 import { CategoryStatus } from '@prisma/client';
-import { IsEnum, IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
 
 export class CreateCategoryDto {
   @ApiProperty({ example: 'Herbal Teas' })
@@ -29,4 +29,9 @@ export class CreateCategoryDto {
   @IsOptional()
   @IsEnum(CategoryStatus)
   status?: CategoryStatus;
+
+  @ApiPropertyOptional({ description: 'Lower numbers display first', default: 0 })
+  @IsOptional()
+  @IsInt()
+  order?: number;
 }

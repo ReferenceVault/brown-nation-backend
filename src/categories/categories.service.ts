@@ -21,6 +21,7 @@ export class CategoriesService {
         description: dto.description,
         image: dto.image,
         status: dto.status,
+        order: dto.order,
       },
     });
   }
@@ -40,7 +41,7 @@ export class CategoriesService {
         where,
         skip: query.skip,
         take: query.take,
-        orderBy: { createdAt: query.sortOrder ?? 'desc' },
+        orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
       }),
       this.prisma.category.count({ where }),
     ]);
@@ -69,6 +70,7 @@ export class CategoriesService {
         description: dto.description,
         image: dto.image,
         status: dto.status,
+        order: dto.order,
       },
     });
   }

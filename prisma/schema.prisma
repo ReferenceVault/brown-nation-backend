@@ -135,6 +135,7 @@ model Category {
   slug        String         @unique
   description String?
   image       String?
+  order       Int            @default(0)
   status      CategoryStatus @default(ACTIVE)
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
