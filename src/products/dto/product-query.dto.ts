@@ -1,7 +1,15 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { ProductStatus } from '@prisma/client';
-import { Type } from 'class-transformer';
-import { IsIn, IsNumber, IsOptional, IsPositive, IsString, IsUUID } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import {
+  IsBoolean,
+  IsIn,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
@@ -47,4 +55,13 @@ export class ProductQueryDto extends PaginationQueryDto {
   @IsOptional()
   @IsIn(['name', 'price', 'createdAt', 'stockQuantity'])
   sortBy?: 'name' | 'price' | 'createdAt' | 'stockQuantity' = 'createdAt';
+
+  @ApiPropertyOptional({ description: 'Filter to only best-seller products' })
+  @IsOptional()
+  @Transform(
+    ({ obj }: { obj: Record<string, unknown> }) =>
+      obj.isBestSeller === true || obj.isBestSeller === 'true',
+  )
+  @IsBoolean()
+  isBestSeller?: boolean;
 }

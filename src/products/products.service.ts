@@ -34,6 +34,7 @@ export class ProductsService {
           categoryId: dto.categoryId,
           status: dto.status ?? ProductStatus.DRAFT,
           stockQuantity: dto.stockQuantity ?? 0,
+          isBestSeller: dto.isBestSeller ?? false,
         },
       });
     } catch (error) {
@@ -45,6 +46,7 @@ export class ProductsService {
     const where: Prisma.ProductWhereInput = {
       ...(query.status === 'ALL' ? {} : { status: query.status ?? ProductStatus.ACTIVE }),
       ...(query.categoryId ? { categoryId: query.categoryId } : {}),
+      ...(query.isBestSeller !== undefined ? { isBestSeller: query.isBestSeller } : {}),
       ...(query.minPrice !== undefined || query.maxPrice !== undefined
         ? {
             price: {
@@ -131,6 +133,7 @@ export class ProductsService {
           categoryId: dto.categoryId,
           status: dto.status,
           stockQuantity: dto.stockQuantity,
+          isBestSeller: dto.isBestSeller,
         },
       });
     } catch (error) {

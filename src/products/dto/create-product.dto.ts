@@ -1,9 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ProductStatus } from '@prisma/client';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
+  IsBoolean,
   IsEnum,
   IsInt,
   IsNumber,
@@ -73,4 +74,13 @@ export class CreateProductDto {
   @IsInt()
   @Min(0)
   stockQuantity?: number;
+
+  @ApiPropertyOptional({ default: false })
+  @IsOptional()
+  @Transform(
+    ({ obj }: { obj: Record<string, unknown> }) =>
+      obj.isBestSeller === true || obj.isBestSeller === 'true',
+  )
+  @IsBoolean()
+  isBestSeller?: boolean;
 }

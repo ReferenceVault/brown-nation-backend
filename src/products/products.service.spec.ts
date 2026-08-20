@@ -24,6 +24,8 @@ describe('ProductsService', () => {
       category: { findUnique: jest.fn() },
       product: {
         findUnique: jest.fn(),
+        findMany: jest.fn(),
+        count: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
         delete: jest.fn(),
@@ -84,6 +86,47 @@ describe('ProductsService', () => {
           categoryId: 'cat-1',
         }),
       ).rejects.toMatchObject({ response: expect.objectContaining({ code: 'DUPLICATE_SKU' }) });
+    });
+
+    it('defaults isBestSeller to false when not provided', async () => {
+      prisma.category.findUnique.mockResolvedValue({ id: 'cat-1' });
+      prisma.product.findUnique.mockResolvedValue(null);
+      prisma.product.create.mockResolvedValue({ id: 'new-product' });
+
+      await service.create({
+        name: 'Assam Gold',
+        description: 'desc',
+        price: 100,
+        sku: 'SKU-1',
+        categoryId: 'cat-1',
+      });
+
+      expect(prisma.product.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ isBestSeller: false }) }),
+      );
+    });
+  });
+
+  describe('findAll', () => {
+    it('filters by isBestSeller when provided', async () => {
+      prisma.product.findMany.mockResolvedValue([]);
+      prisma.product.count.mockResolvedValue(0);
+
+      await service.findAll({ isBestSeller: true, skip: 0, take: 20 } as never);
+
+      expect(prisma.product.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ isBestSeller: true }) }),
+      );
+    });
+
+    it('does not filter by isBestSeller when omitted', async () => {
+      prisma.product.findMany.mockResolvedValue([]);
+      prisma.product.count.mockResolvedValue(0);
+
+      await service.findAll({ skip: 0, take: 20 } as never);
+
+      const where = prisma.product.findMany.mock.calls[0][0].where;
+      expect(where).not.toHaveProperty('isBestSeller');
     });
   });
 
