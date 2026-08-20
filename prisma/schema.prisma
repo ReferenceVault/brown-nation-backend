@@ -159,6 +159,7 @@ model Product {
   status         ProductStatus @default(DRAFT)
   stockQuantity  Int           @default(0)
   isBestSeller   Boolean       @default(false)
+  minOrderQuantity Int         @default(1)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 

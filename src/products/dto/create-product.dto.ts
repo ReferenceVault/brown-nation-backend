@@ -83,4 +83,15 @@ export class CreateProductDto {
   )
   @IsBoolean()
   isBestSeller?: boolean;
+
+  @ApiPropertyOptional({
+    example: 1,
+    default: 1,
+    description: 'Minimum quantity a customer can order',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  minOrderQuantity?: number;
 }

@@ -35,6 +35,7 @@ export class ProductsService {
           status: dto.status ?? ProductStatus.DRAFT,
           stockQuantity: dto.stockQuantity ?? 0,
           isBestSeller: dto.isBestSeller ?? false,
+          minOrderQuantity: dto.minOrderQuantity ?? 1,
         },
       });
     } catch (error) {
@@ -134,6 +135,7 @@ export class ProductsService {
           status: dto.status,
           stockQuantity: dto.stockQuantity,
           isBestSeller: dto.isBestSeller,
+          minOrderQuantity: dto.minOrderQuantity,
         },
       });
     } catch (error) {
