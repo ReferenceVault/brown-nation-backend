@@ -59,6 +59,18 @@ export class CreateProductDto {
   @IsUrl({ require_tld: false }, { each: true })
   images?: string[];
 
+  @ApiPropertyOptional({
+    type: [String],
+    description: "What's included, e.g. for hamper/gift-box products",
+    example: ['2 Dried Nuts Bottle', '1 Happy Rakshabandhan Bar', '4 Happy Rakshabandhan Bites'],
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(20)
+  @IsString({ each: true })
+  @MaxLength(200, { each: true })
+  contents?: string[];
+
   @ApiProperty()
   @IsUUID()
   categoryId: string;

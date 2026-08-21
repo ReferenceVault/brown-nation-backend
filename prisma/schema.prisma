@@ -155,6 +155,7 @@ model Product {
   compareAtPrice Decimal?      @db.Decimal(10, 2)
   sku            String        @unique
   images         String[]      @default([])
+  contents       String[]      @default([])
   categoryId     String
   status         ProductStatus @default(DRAFT)
   stockQuantity  Int           @default(0)
