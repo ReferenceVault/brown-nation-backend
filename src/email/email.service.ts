@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { OrderStatus } from '@prisma/client';
 
 import { AppConfig, EmailConfig } from '../config/configuration';
 import { EMAIL_PROVIDER, EmailProvider } from './interfaces/email-provider.interface';
@@ -199,6 +200,30 @@ ${renderButton(orderLink, 'Track Your Order')}
       ),
     });
   }
+
+  async sendOrderStatusUpdateEmail(order: OrderStatusEmailDetails): Promise<void> {
+    const copy = ORDER_STATUS_EMAIL_COPY[order.status];
+    if (!copy) return;
+
+    const orderLink = `${this.frontendUrl}/account/orders/${order.orderId}`;
+    const noteText = order.note ? `\n\nNote: ${order.note}` : '';
+    const noteHtml = order.note
+      ? `<div style="margin:0 0 20px;padding:12px 16px;background-color:${emailColors.brand50};border-radius:12px;font-size:14px;">${escapeHtml(order.note)}</div>`
+      : '';
+
+    await this.provider.send({
+      to: order.customerEmail,
+      subject: `${copy.subject} — #${order.orderNumber}`,
+      text: `Hi ${order.customerName},\n\n${copy.text(order.orderNumber)}${noteText}\n\nView your order: ${orderLink}\n\nThanks for choosing Brown Nation!`,
+      html: this.layout(
+        `${copy.subject} — #${order.orderNumber}`,
+        `<p style="margin:0 0 16px;font-size:16px;font-weight:bold;color:${emailColors.espresso};">Hi ${escapeHtml(order.customerName)},</p>
+<p style="margin:0 0 20px;">${copy.html(order.orderNumber)}</p>
+${noteHtml}${renderButton(orderLink, 'View Your Order')}
+<p style="margin:16px 0 0;">Thanks for choosing Brown Nation!</p>`,
+      ),
+    });
+  }
 }
 
 type OrderEmailDetails = {
@@ -209,6 +234,52 @@ type OrderEmailDetails = {
   totalAmount: string;
   currency: string;
   items: { productName: string; quantity: number; totalPrice: string }[];
+};
+
+type OrderStatusEmailDetails = {
+  orderId: string;
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  status: OrderStatus;
+  note?: string;
+};
+
+const ORDER_STATUS_EMAIL_COPY: Partial<
+  Record<
+    OrderStatus,
+    {
+      subject: string;
+      text: (orderNumber: string) => string;
+      html: (orderNumber: string) => string;
+    }
+  >
+> = {
+  [OrderStatus.CONFIRMED]: {
+    subject: 'Order confirmed',
+    text: (n) => `Your order #${n} has been confirmed and is being prepared.`,
+    html: (n) => `Your order <strong>#${n}</strong> has been confirmed and is being prepared.`,
+  },
+  [OrderStatus.PROCESSING]: {
+    subject: 'Order is being prepared',
+    text: (n) => `Your order #${n} is now being prepared.`,
+    html: (n) => `Your order <strong>#${n}</strong> is now being prepared.`,
+  },
+  [OrderStatus.SHIPPED]: {
+    subject: 'Order shipped',
+    text: (n) => `Your order #${n} has shipped and is on its way to you.`,
+    html: (n) => `Your order <strong>#${n}</strong> has shipped and is on its way to you.`,
+  },
+  [OrderStatus.DELIVERED]: {
+    subject: 'Order delivered',
+    text: (n) => `Your order #${n} has been delivered. We hope you enjoy it!`,
+    html: (n) => `Your order <strong>#${n}</strong> has been delivered. We hope you enjoy it!`,
+  },
+  [OrderStatus.CANCELLED]: {
+    subject: 'Order cancelled',
+    text: (n) => `Your order #${n} has been cancelled.`,
+    html: (n) => `Your order <strong>#${n}</strong> has been cancelled.`,
+  },
 };
 
 function formatMoney(amount: string, currency: string): string {

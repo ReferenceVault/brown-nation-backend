@@ -1,6 +1,12 @@
 import { randomBytes } from 'node:crypto';
 
-import { ForbiddenException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  HttpStatus,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   InventoryChangeReason,
   OrderStatus,
@@ -13,6 +19,7 @@ import {
 import { ErrorCode } from '../common/constants/error-codes.constant';
 import { AppException } from '../common/exceptions/app.exception';
 import { PrismaService } from '../database/prisma.service';
+import { EmailService } from '../email/email.service';
 import { InventoryService } from '../inventory/inventory.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderQueryDto } from './dto/order-query.dto';
@@ -44,9 +51,12 @@ type OrderListItem = Prisma.OrderGetPayload<{ include: typeof ORDER_LIST_INCLUDE
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly inventoryService: InventoryService,
+    private readonly emailService: EmailService,
   ) {}
 
   async create(userId: string, dto: CreateOrderDto): Promise<OrderWithDetails> {
@@ -209,7 +219,7 @@ export class OrdersService {
       );
     }
 
-    return this.prisma.$transaction(
+    const updatedOrder = await this.prisma.$transaction(
       async (tx) => {
         if (
           newStatus === OrderStatus.CANCELLED &&
@@ -235,6 +245,38 @@ export class OrdersService {
       },
       { timeout: TRANSACTION_TIMEOUT_MS },
     );
+
+    await this.sendStatusUpdateEmail(updatedOrder, newStatus, note);
+
+    return updatedOrder;
+  }
+
+  /**
+   * Best-effort: the status change is already committed, so a transient
+   * email provider issue shouldn't fail the request — just log it.
+   */
+  private async sendStatusUpdateEmail(
+    order: OrderWithDetails,
+    status: OrderStatus,
+    note?: string,
+  ): Promise<void> {
+    if (!order.user?.email) return;
+
+    const customerName =
+      [order.user.firstName, order.user.lastName].filter(Boolean).join(' ') || 'there';
+
+    try {
+      await this.emailService.sendOrderStatusUpdateEmail({
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        customerName,
+        customerEmail: order.user.email,
+        status,
+        note,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send status update email for order ${order.id}`, error as Error);
+    }
   }
 
   private generateOrderNumber(): string {
