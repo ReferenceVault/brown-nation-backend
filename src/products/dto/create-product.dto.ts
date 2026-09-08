@@ -15,7 +15,22 @@ import {
   IsUrl,
   Min,
   MaxLength,
+  ValidateNested,
 } from 'class-validator';
+
+export class ProductVariantInputDto {
+  @ApiProperty({ example: 6, description: 'Cavity count for this pricing option' })
+  @Type(() => Number)
+  @IsInt()
+  @IsPositive()
+  cavityCount: number;
+
+  @ApiProperty({ example: 129.0 })
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @IsPositive()
+  price: number;
+}
 
 export class CreateProductDto {
   @ApiProperty({ example: 'Assam Gold Loose Leaf Tea' })
@@ -106,4 +121,16 @@ export class CreateProductDto {
   @IsInt()
   @Min(1)
   minOrderQuantity?: number;
+
+  @ApiPropertyOptional({
+    type: [ProductVariantInputDto],
+    description:
+      'Cavity-based pricing options (e.g. 6/9/12/16 cavity boxes of this flavor), each at its own price',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(12)
+  @ValidateNested({ each: true })
+  @Type(() => ProductVariantInputDto)
+  variants?: ProductVariantInputDto[];
 }

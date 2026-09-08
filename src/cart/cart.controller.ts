@@ -21,7 +21,7 @@ export class CartController {
   @Post('items')
   @ApiOperation({ summary: 'Add a product to the cart' })
   async addItem(@CurrentUser('id') userId: string, @Body() dto: AddCartItemDto) {
-    return this.cartService.addItem(userId, dto.productId, dto.quantity);
+    return this.cartService.addItem(userId, dto.productId, dto.quantity, dto.variantId);
   }
 
   @Patch('items/:itemId')

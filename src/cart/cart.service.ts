@@ -1,15 +1,19 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { Cart, CartItem, Prisma, Product, ProductStatus } from '@prisma/client';
+import { Cart, CartItem, Prisma, Product, ProductStatus, ProductVariant } from '@prisma/client';
 
 import { ErrorCode } from '../common/constants/error-codes.constant';
 import { AppException } from '../common/exceptions/app.exception';
 import { PrismaService } from '../database/prisma.service';
 
-type CartWithItems = Cart & { items: (CartItem & { product: Product })[] };
+type CartWithItems = Cart & {
+  items: (CartItem & { product: Product; variant: ProductVariant | null })[];
+};
 
 export interface CartItemView {
   id: string;
   productId: string;
+  variantId: string | null;
+  variantLabel: string | null;
   name: string;
   slug: string;
   image: string | null;
@@ -35,11 +39,21 @@ export class CartService {
     return this.toCartView(cart);
   }
 
-  async addItem(userId: string, productId: string, quantity: number): Promise<CartView> {
+  async addItem(
+    userId: string,
+    productId: string,
+    quantity: number,
+    variantId?: string,
+  ): Promise<CartView> {
     const product = await this.getSellableProduct(productId);
+    if (variantId) {
+      await this.getProductVariant(productId, variantId);
+    }
     const cart = await this.getOrCreateCart(userId);
 
-    const existing = cart.items.find((item) => item.productId === productId);
+    const existing = cart.items.find(
+      (item) => item.productId === productId && (item.variantId ?? null) === (variantId ?? null),
+    );
     const requestedTotal = (existing?.quantity ?? 0) + quantity;
 
     if (requestedTotal > product.stockQuantity) {
@@ -57,7 +71,7 @@ export class CartService {
       });
     } else {
       await this.prisma.cartItem.create({
-        data: { cartId: cart.id, productId, quantity },
+        data: { cartId: cart.id, productId, quantity, variantId },
       });
     }
 
@@ -95,7 +109,9 @@ export class CartService {
   private async getOrCreateCart(userId: string): Promise<CartWithItems> {
     const cart = await this.prisma.cart.findUnique({
       where: { userId },
-      include: { items: { include: { product: true }, orderBy: { createdAt: 'asc' } } },
+      include: {
+        items: { include: { product: true, variant: true }, orderBy: { createdAt: 'asc' } },
+      },
     });
 
     if (cart) {
@@ -104,7 +120,7 @@ export class CartService {
 
     return this.prisma.cart.create({
       data: { userId },
-      include: { items: { include: { product: true } } },
+      include: { items: { include: { product: true, variant: true } } },
     });
   }
 
@@ -144,24 +160,38 @@ export class CartService {
     return product;
   }
 
+  private async getProductVariant(productId: string, variantId: string): Promise<ProductVariant> {
+    const variant = await this.prisma.productVariant.findUnique({ where: { id: variantId } });
+    if (!variant || variant.productId !== productId) {
+      throw new AppException(
+        ErrorCode.NOT_FOUND,
+        'Selected cavity option is not available for this product',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    return variant;
+  }
+
   private toCartView(cart: CartWithItems): CartView {
+    const unitPrice = (item: CartWithItems['items'][number]) =>
+      item.variant?.price ?? item.product.price;
+
     const items: CartItemView[] = cart.items.map((item) => ({
       id: item.id,
       productId: item.productId,
+      variantId: item.variantId,
+      variantLabel: item.variant ? `${item.variant.cavityCount} Cavity` : null,
       name: item.product.name,
       slug: item.product.slug,
       image: item.product.images[0] ?? null,
-      price: item.product.price.toString(),
+      price: unitPrice(item).toString(),
       quantity: item.quantity,
       stockQuantity: item.product.stockQuantity,
-      lineTotal: item.product.price.times(item.quantity).toString(),
+      lineTotal: unitPrice(item).times(item.quantity).toString(),
     }));
 
     const subtotal = cart.items
-      .reduce(
-        (sum, item) => sum.plus(item.product.price.times(item.quantity)),
-        new Prisma.Decimal(0),
-      )
+      .reduce((sum, item) => sum.plus(unitPrice(item).times(item.quantity)), new Prisma.Decimal(0))
       .toString();
 
     return {

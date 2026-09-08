@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { Prisma, Product, ProductStatus } from '@prisma/client';
+import { Prisma, ProductStatus } from '@prisma/client';
 
 import { ErrorCode } from '../common/constants/error-codes.constant';
 import { AppException } from '../common/exceptions/app.exception';
@@ -9,11 +9,15 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { ProductQueryDto } from './dto/product-query.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
+const PRODUCT_INCLUDE = {
+  variants: { orderBy: { cavityCount: 'asc' as const } },
+} satisfies Prisma.ProductInclude;
+
 @Injectable()
 export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(dto: CreateProductDto): Promise<Product> {
+  async create(dto: CreateProductDto) {
     const category = await this.prisma.category.findUnique({ where: { id: dto.categoryId } });
     if (!category) {
       throw new AppException(ErrorCode.NOT_FOUND, 'Category not found', HttpStatus.BAD_REQUEST);
@@ -37,7 +41,11 @@ export class ProductsService {
           stockQuantity: dto.stockQuantity ?? 0,
           isBestSeller: dto.isBestSeller ?? false,
           minOrderQuantity: dto.minOrderQuantity ?? 1,
+          variants: dto.variants?.length
+            ? { create: dto.variants.map((v) => ({ cavityCount: v.cavityCount, price: v.price })) }
+            : undefined,
         },
+        include: PRODUCT_INCLUDE,
       });
     } catch (error) {
       throw this.mapWriteError(error);
@@ -78,6 +86,7 @@ export class ProductsService {
         skip: query.skip,
         take: query.take,
         orderBy: { [query.sortBy ?? 'createdAt']: query.sortOrder ?? 'desc' },
+        include: PRODUCT_INCLUDE,
       }),
       this.prisma.product.count({ where }),
     ]);
@@ -85,8 +94,11 @@ export class ProductsService {
     return { items, total };
   }
 
-  async findOne(id: string): Promise<Product> {
-    const product = await this.prisma.product.findUnique({ where: { id } });
+  async findOne(id: string) {
+    const product = await this.prisma.product.findUnique({
+      where: { id },
+      include: PRODUCT_INCLUDE,
+    });
     if (!product) {
       throw new AppException(
         ErrorCode.PRODUCT_NOT_FOUND,
@@ -97,8 +109,11 @@ export class ProductsService {
     return product;
   }
 
-  async findBySlug(slug: string): Promise<Product> {
-    const product = await this.prisma.product.findUnique({ where: { slug } });
+  async findBySlug(slug: string) {
+    const product = await this.prisma.product.findUnique({
+      where: { slug },
+      include: PRODUCT_INCLUDE,
+    });
     if (!product) {
       throw new AppException(
         ErrorCode.PRODUCT_NOT_FOUND,
@@ -109,7 +124,7 @@ export class ProductsService {
     return product;
   }
 
-  async update(id: string, dto: UpdateProductDto): Promise<Product> {
+  async update(id: string, dto: UpdateProductDto) {
     await this.findOne(id);
 
     if (dto.categoryId) {
@@ -138,7 +153,14 @@ export class ProductsService {
           stockQuantity: dto.stockQuantity,
           isBestSeller: dto.isBestSeller,
           minOrderQuantity: dto.minOrderQuantity,
+          variants: dto.variants
+            ? {
+                deleteMany: {},
+                create: dto.variants.map((v) => ({ cavityCount: v.cavityCount, price: v.price })),
+              }
+            : undefined,
         },
+        include: PRODUCT_INCLUDE,
       });
     } catch (error) {
       throw this.mapWriteError(error);

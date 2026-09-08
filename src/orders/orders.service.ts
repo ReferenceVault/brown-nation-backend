@@ -79,6 +79,14 @@ export class OrdersService {
         });
         const productMap = new Map(products.map((product) => [product.id, product]));
 
+        const variantIds = cartItems
+          .map((item) => item.variantId)
+          .filter((id): id is string => id !== null);
+        const variants = variantIds.length
+          ? await tx.productVariant.findMany({ where: { id: { in: variantIds } } })
+          : [];
+        const variantMap = new Map(variants.map((variant) => [variant.id, variant]));
+
         let subtotal = new Prisma.Decimal(0);
         const orderItemsData: Prisma.OrderItemCreateManyOrderInput[] = [];
 
@@ -92,14 +100,17 @@ export class OrdersService {
             );
           }
 
-          const lineTotal = product.price.times(cartItem.quantity);
+          const variant = cartItem.variantId ? variantMap.get(cartItem.variantId) : undefined;
+          const unitPrice = variant?.price ?? product.price;
+          const lineTotal = unitPrice.times(cartItem.quantity);
           subtotal = subtotal.plus(lineTotal);
 
           orderItemsData.push({
             productId: product.id,
             productName: product.name,
             sku: product.sku,
-            unitPrice: product.price,
+            variantLabel: variant ? `${variant.cavityCount} Cavity` : undefined,
+            unitPrice,
             quantity: cartItem.quantity,
             totalPrice: lineTotal,
           });
