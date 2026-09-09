@@ -52,6 +52,13 @@ export class PaymentsService {
         HttpStatus.CONFLICT,
       );
     }
+    if (order.status === OrderStatus.CANCELLED) {
+      throw new AppException(
+        ErrorCode.PAYMENT_FAILED,
+        'This order has been cancelled and can no longer be paid',
+        HttpStatus.CONFLICT,
+      );
+    }
 
     const intent = await this.provider.createPaymentIntent({
       orderId: order.id,
