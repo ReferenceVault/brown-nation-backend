@@ -7,6 +7,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
   InventoryChangeReason,
   OrderStatus,
@@ -18,6 +19,7 @@ import {
 
 import { ErrorCode } from '../common/constants/error-codes.constant';
 import { AppException } from '../common/exceptions/app.exception';
+import { ShippingConfig } from '../config/configuration';
 import { PrismaService } from '../database/prisma.service';
 import { EmailService } from '../email/email.service';
 import { InventoryService } from '../inventory/inventory.service';
@@ -25,8 +27,6 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderQueryDto } from './dto/order-query.dto';
 import { isTransitionAllowed, STOCK_RELEASABLE_STATUSES } from './order-status-transitions';
 
-const FREE_SHIPPING_THRESHOLD = new Prisma.Decimal(999);
-const FLAT_SHIPPING_FEE = new Prisma.Decimal(99);
 const TRANSACTION_TIMEOUT_MS = 15_000;
 
 const ORDER_USER_SELECT = {
@@ -52,12 +52,16 @@ type OrderListItem = Prisma.OrderGetPayload<{ include: typeof ORDER_LIST_INCLUDE
 @Injectable()
 export class OrdersService {
   private readonly logger = new Logger(OrdersService.name);
+  private readonly shippingConfig: ShippingConfig;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly inventoryService: InventoryService,
     private readonly emailService: EmailService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    this.shippingConfig = this.configService.get<ShippingConfig>('shipping')!;
+  }
 
   async create(userId: string, dto: CreateOrderDto): Promise<OrderWithDetails> {
     const cart = await this.prisma.cart.findUnique({
@@ -116,9 +120,9 @@ export class OrdersService {
           });
         }
 
-        const shippingAmount = subtotal.gte(FREE_SHIPPING_THRESHOLD)
+        const shippingAmount = subtotal.gte(this.shippingConfig.freeThreshold)
           ? new Prisma.Decimal(0)
-          : FLAT_SHIPPING_FEE;
+          : new Prisma.Decimal(this.shippingConfig.flatFee);
         const taxAmount = new Prisma.Decimal(0);
         const discount = new Prisma.Decimal(0);
         const totalAmount = subtotal.minus(discount).plus(shippingAmount).plus(taxAmount);
