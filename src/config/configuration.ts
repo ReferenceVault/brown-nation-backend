@@ -36,11 +36,6 @@ export interface S3Config {
   publicUrl: string;
 }
 
-export interface ShippingConfig {
-  flatFee: number;
-  freeThreshold: number;
-}
-
 export interface PaymentConfig {
   provider: 'mock' | 'stripe' | 'razorpay';
   stripeSecretKey?: string;
@@ -106,10 +101,6 @@ export default () => ({
     forcePathStyle: (process.env.S3_FORCE_PATH_STYLE ?? 'true') === 'true',
     publicUrl: process.env.S3_PUBLIC_URL ?? '',
   } satisfies S3Config,
-  shipping: {
-    flatFee: parseFloat(process.env.SHIPPING_FLAT_FEE ?? '99'),
-    freeThreshold: parseFloat(process.env.SHIPPING_FREE_THRESHOLD ?? '999'),
-  } satisfies ShippingConfig,
   payment: {
     provider: (process.env.PAYMENT_PROVIDER ?? 'mock') as 'mock' | 'stripe' | 'razorpay',
     stripeSecretKey: process.env.STRIPE_SECRET_KEY,

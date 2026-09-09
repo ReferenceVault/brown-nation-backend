@@ -22,6 +22,7 @@ import { NewsletterModule } from './newsletter/newsletter.module';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
 import { ProductsModule } from './products/products.module';
+import { ShippingSettingsModule } from './shipping-settings/shipping-settings.module';
 import { StorageModule } from './storage/storage.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { UsersModule } from './users/users.module';
@@ -69,6 +70,7 @@ import { UsersModule } from './users/users.module';
     NewsletterModule,
     HeroSlidesModule,
     EnquiriesModule,
+    ShippingSettingsModule,
   ],
   providers: [
     // Global guard chain, applied in order: rate limit -> authenticate -> authorize.

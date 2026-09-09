@@ -346,6 +346,17 @@ model HeroSlide {
   @@map("hero_slides")
 }
 
+/// Single-row table holding the store's current shipping fee. Always exactly
+/// one row, read and updated via ShippingSettingsService.
+model ShippingSettings {
+  id            String   @id @default(uuid())
+  flatFee       Decimal  @db.Decimal(10, 2)
+  freeThreshold Decimal  @db.Decimal(10, 2)
+  updatedAt     DateTime @updatedAt
+
+  @@map("shipping_settings")
+}
+
 model ContactEnquiry {
   id        String        @id @default(uuid())
   name      String
