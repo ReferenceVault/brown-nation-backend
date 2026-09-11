@@ -18,6 +18,7 @@ import {
 
 import { ErrorCode } from '../common/constants/error-codes.constant';
 import { AppException } from '../common/exceptions/app.exception';
+import { CouponsService } from '../coupons/coupons.service';
 import { PrismaService } from '../database/prisma.service';
 import { EmailService } from '../email/email.service';
 import { InventoryService } from '../inventory/inventory.service';
@@ -57,6 +58,7 @@ export class OrdersService {
     private readonly inventoryService: InventoryService,
     private readonly emailService: EmailService,
     private readonly shippingSettingsService: ShippingSettingsService,
+    private readonly couponsService: CouponsService,
   ) {}
 
   async create(userId: string, dto: CreateOrderDto): Promise<OrderWithDetails> {
@@ -121,7 +123,28 @@ export class OrdersService {
           ? new Prisma.Decimal(0)
           : shippingSettings.flatFee;
         const taxAmount = new Prisma.Decimal(0);
-        const discount = new Prisma.Decimal(0);
+
+        let discount = new Prisma.Decimal(0);
+        let couponResult: Awaited<ReturnType<CouponsService['validateForItems']>> | undefined;
+        if (dto.couponCode) {
+          couponResult = await this.couponsService.validateForItems(
+            dto.couponCode,
+            userId,
+            cartItems.map((cartItem) => {
+              const product = productMap.get(cartItem.productId)!;
+              const variant = cartItem.variantId ? variantMap.get(cartItem.variantId) : undefined;
+              return {
+                productId: product.id,
+                categoryId: product.categoryId,
+                quantity: cartItem.quantity,
+                unitPrice: variant?.price ?? product.price,
+              };
+            }),
+            tx,
+          );
+          discount = couponResult.discountAmount;
+        }
+
         const totalAmount = subtotal.minus(discount).plus(shippingAmount).plus(taxAmount);
 
         const order = await tx.order.create({
@@ -138,12 +161,24 @@ export class OrdersService {
             shippingAddress: { ...dto.shippingAddress },
             billingAddress: { ...(dto.billingAddress ?? dto.shippingAddress) },
             paymentStatus: PaymentStatus.PENDING,
+            couponId: couponResult?.coupon.id,
+            couponCode: couponResult?.coupon.code,
             items: { createMany: { data: orderItemsData } },
             statusHistory: {
               create: { status: OrderStatus.PENDING, note: 'Order placed' },
             },
           },
         });
+
+        if (couponResult) {
+          await this.couponsService.recordRedemption(
+            tx,
+            couponResult.coupon.id,
+            userId,
+            order.id,
+            couponResult.discountAmount,
+          );
+        }
 
         for (const cartItem of cartItems) {
           await this.inventoryService.reserveStock(
@@ -248,6 +283,7 @@ export class OrdersService {
               );
             }
           }
+          await this.couponsService.releaseRedemption(tx, order.id);
         }
 
         await tx.order.update({ where: { id: orderId }, data: { status: newStatus } });

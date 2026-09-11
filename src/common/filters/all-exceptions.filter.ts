@@ -77,7 +77,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     return {
       status: HttpStatus.INTERNAL_SERVER_ERROR,
       code: ErrorCode.INTERNAL_SERVER_ERROR,
-      message: 'An unexpected error occurred',
+      message: 'Something went wrong. Please try again.',
     };
   }
 
@@ -141,7 +141,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         return {
           status: HttpStatus.INTERNAL_SERVER_ERROR,
           code: ErrorCode.INTERNAL_SERVER_ERROR,
-          message: 'A database error occurred',
+          message: 'Something went wrong. Please try again.',
         };
     }
   }

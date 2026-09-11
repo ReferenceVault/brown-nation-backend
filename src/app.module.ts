@@ -4,11 +4,13 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 
+import { AnnouncementsModule } from './announcements/announcements.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { CartModule } from './cart/cart.module';
 import { CategoriesModule } from './categories/categories.module';
 import { RolesGuard } from './common/guards/roles.guard';
+import { CouponsModule } from './coupons/coupons.module';
 import configuration, { AppConfig } from './config/configuration';
 import { validate } from './config/env.validation';
 import { buildLoggerOptions } from './config/logger.config';
@@ -22,6 +24,7 @@ import { NewsletterModule } from './newsletter/newsletter.module';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
 import { ProductsModule } from './products/products.module';
+import { PromoBannersModule } from './promo-banners/promo-banners.module';
 import { ShippingSettingsModule } from './shipping-settings/shipping-settings.module';
 import { StorageModule } from './storage/storage.module';
 import { UploadsModule } from './uploads/uploads.module';
@@ -71,6 +74,9 @@ import { UsersModule } from './users/users.module';
     HeroSlidesModule,
     EnquiriesModule,
     ShippingSettingsModule,
+    CouponsModule,
+    PromoBannersModule,
+    AnnouncementsModule,
   ],
   providers: [
     // Global guard chain, applied in order: rate limit -> authenticate -> authorize.
