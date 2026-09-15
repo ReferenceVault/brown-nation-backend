@@ -39,6 +39,9 @@ async function bootstrap(): Promise<void> {
       .addTag('newsletter', 'Newsletter subscriptions')
       .addTag('hero-slides', 'Homepage hero carousel content')
       .addTag('enquiries', 'Contact form enquiries')
+      .addTag('coupons', 'Discount coupons')
+      .addTag('promo-banners', 'Promotional banners')
+      .addTag('announcements', 'Site-wide announcement bar')
       .addTag('health', 'Health checks')
       .build();
 

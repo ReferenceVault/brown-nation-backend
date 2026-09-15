@@ -74,6 +74,26 @@ enum EnquiryStatus {
   RESOLVED
 }
 
+enum CouponDiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum CouponStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum PromoBannerStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AnnouncementStatus {
+  ACTIVE
+  INACTIVE
+}
+
 // ==============================
 // Models
 // ==============================
@@ -237,17 +257,22 @@ model Order {
   shippingAddress Json
   billingAddress  Json
   paymentStatus   PaymentStatus @default(PENDING)
+  couponId        String?
+  couponCode      String?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
   user          User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  coupon        Coupon?              @relation(fields: [couponId], references: [id], onDelete: SetNull)
   items         OrderItem[]
   payments      Payment[]
   statusHistory OrderStatusHistory[]
+  redemption    CouponRedemption?
 
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+  @@index([couponId])
   @@map("orders")
 }
 
@@ -355,6 +380,78 @@ model ShippingSettings {
   updatedAt     DateTime @updatedAt
 
   @@map("shipping_settings")
+}
+
+model Coupon {
+  id                    String             @id @default(uuid())
+  code                  String             @unique
+  discountType          CouponDiscountType
+  discountValue         Decimal            @db.Decimal(10, 2)
+  minOrderAmount        Decimal?           @db.Decimal(10, 2)
+  maxDiscountAmount     Decimal?           @db.Decimal(10, 2)
+  startsAt              DateTime?
+  expiresAt             DateTime?
+  usageLimit            Int?
+  perCustomerLimit      Int?
+  status                CouponStatus       @default(ACTIVE)
+  applicableCategoryIds String[]           @default([])
+  applicableProductIds  String[]           @default([])
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  redemptions CouponRedemption[]
+  orders      Order[]
+
+  @@index([status])
+  @@map("coupons")
+}
+
+model CouponRedemption {
+  id             String   @id @default(uuid())
+  couponId       String
+  userId         String?
+  orderId        String   @unique
+  discountAmount Decimal  @db.Decimal(10, 2)
+  createdAt      DateTime @default(now())
+
+  coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([couponId])
+  @@index([userId])
+  @@map("coupon_redemptions")
+}
+
+model PromoBanner {
+  id          String            @id @default(uuid())
+  eyebrow     String
+  heading     String
+  description String
+  couponCode  String?
+  ctaLabel    String            @default("Shop Now")
+  ctaHref     String            @default("/shop")
+  image       String?
+  order       Int               @default(0)
+  status      PromoBannerStatus @default(ACTIVE)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([status])
+  @@map("promo_banners")
+}
+
+model Announcement {
+  id        String             @id @default(uuid())
+  text      String
+  linkLabel String?
+  linkHref  String?
+  order     Int                @default(0)
+  status    AnnouncementStatus @default(ACTIVE)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@index([status])
+  @@map("announcements")
 }
 
 model ContactEnquiry {
