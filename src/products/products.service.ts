@@ -5,6 +5,7 @@ import { ErrorCode } from '../common/constants/error-codes.constant';
 import { AppException } from '../common/exceptions/app.exception';
 import { slugify } from '../common/utils/slugify.util';
 import { PrismaService } from '../database/prisma.service';
+import { UploadsService } from '../uploads/uploads.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { ProductQueryDto } from './dto/product-query.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -13,9 +14,18 @@ const PRODUCT_INCLUDE = {
   variants: { orderBy: { cavityCount: 'asc' as const } },
 } satisfies Prisma.ProductInclude;
 
+type ProductWithVariants = Prisma.ProductGetPayload<{ include: typeof PRODUCT_INCLUDE }>;
+
+function imageUrlsOf(product: ProductWithVariants): (string | null)[] {
+  return [...product.images, ...product.variants.map((v) => v.image)];
+}
+
 @Injectable()
 export class ProductsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly uploadsService: UploadsService,
+  ) {}
 
   async create(dto: CreateProductDto) {
     const category = await this.prisma.category.findUnique({ where: { id: dto.categoryId } });
@@ -42,7 +52,13 @@ export class ProductsService {
           isBestSeller: dto.isBestSeller ?? false,
           minOrderQuantity: dto.minOrderQuantity ?? 1,
           variants: dto.variants?.length
-            ? { create: dto.variants.map((v) => ({ cavityCount: v.cavityCount, price: v.price })) }
+            ? {
+                create: dto.variants.map((v) => ({
+                  cavityCount: v.cavityCount,
+                  price: v.price,
+                  image: v.image,
+                })),
+              }
             : undefined,
         },
         include: PRODUCT_INCLUDE,
@@ -125,7 +141,7 @@ export class ProductsService {
   }
 
   async update(id: string, dto: UpdateProductDto) {
-    await this.findOne(id);
+    const existing = await this.findOne(id);
 
     if (dto.categoryId) {
       const category = await this.prisma.category.findUnique({ where: { id: dto.categoryId } });
@@ -136,8 +152,9 @@ export class ProductsService {
 
     const slug = dto.slug ? await this.resolveUniqueSlug(dto.slug, id) : undefined;
 
+    let updated: ProductWithVariants;
     try {
-      return await this.prisma.product.update({
+      updated = await this.prisma.product.update({
         where: { id },
         data: {
           name: dto.name,
@@ -156,7 +173,11 @@ export class ProductsService {
           variants: dto.variants
             ? {
                 deleteMany: {},
-                create: dto.variants.map((v) => ({ cavityCount: v.cavityCount, price: v.price })),
+                create: dto.variants.map((v) => ({
+                  cavityCount: v.cavityCount,
+                  price: v.price,
+                  image: v.image,
+                })),
               }
             : undefined,
         },
@@ -165,11 +186,18 @@ export class ProductsService {
     } catch (error) {
       throw this.mapWriteError(error);
     }
+
+    const stillUsed = new Set(imageUrlsOf(updated));
+    const orphaned = imageUrlsOf(existing).filter((url) => url && !stillUsed.has(url));
+    await this.uploadsService.deleteManyByUrls(orphaned);
+
+    return updated;
   }
 
   async remove(id: string): Promise<void> {
-    await this.findOne(id);
+    const existing = await this.findOne(id);
     await this.prisma.product.delete({ where: { id } });
+    await this.uploadsService.deleteManyByUrls(imageUrlsOf(existing));
   }
 
   private async resolveUniqueSlug(source: string, excludeId?: string): Promise<string> {

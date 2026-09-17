@@ -2,13 +2,17 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PromoBanner, Prisma } from '@prisma/client';
 
 import { PrismaService } from '../database/prisma.service';
+import { UploadsService } from '../uploads/uploads.service';
 import { CreatePromoBannerDto } from './dto/create-promo-banner.dto';
 import { PromoBannerQueryDto } from './dto/promo-banner-query.dto';
 import { UpdatePromoBannerDto } from './dto/update-promo-banner.dto';
 
 @Injectable()
 export class PromoBannersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly uploadsService: UploadsService,
+  ) {}
 
   async create(dto: CreatePromoBannerDto): Promise<PromoBanner> {
     return this.prisma.promoBanner.create({ data: dto });
@@ -39,12 +43,19 @@ export class PromoBannersService {
   }
 
   async update(id: string, dto: UpdatePromoBannerDto): Promise<PromoBanner> {
-    await this.findOne(id);
-    return this.prisma.promoBanner.update({ where: { id }, data: dto });
+    const existing = await this.findOne(id);
+    const updated = await this.prisma.promoBanner.update({ where: { id }, data: dto });
+
+    if (existing.image && existing.image !== updated.image) {
+      await this.uploadsService.deleteByUrl(existing.image);
+    }
+
+    return updated;
   }
 
   async remove(id: string): Promise<void> {
-    await this.findOne(id);
+    const existing = await this.findOne(id);
     await this.prisma.promoBanner.delete({ where: { id } });
+    await this.uploadsService.deleteByUrl(existing.image);
   }
 }

@@ -17,6 +17,7 @@ describe('ProductsService', () => {
     category: Record<string, jest.Mock>;
     product: Record<string, jest.Mock>;
   };
+  let uploads: { deleteByUrl: jest.Mock; deleteManyByUrls: jest.Mock };
   let service: ProductsService;
 
   beforeEach(() => {
@@ -31,7 +32,8 @@ describe('ProductsService', () => {
         delete: jest.fn(),
       },
     };
-    service = new ProductsService(prisma as unknown as PrismaService);
+    uploads = { deleteByUrl: jest.fn(), deleteManyByUrls: jest.fn() };
+    service = new ProductsService(prisma as unknown as PrismaService, uploads as never);
   });
 
   describe('create', () => {

@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { FastifyRequest } from 'fastify';
 
@@ -20,6 +20,8 @@ export type UploadFolder = (typeof ALLOWED_UPLOAD_FOLDERS)[number];
 
 @Injectable()
 export class UploadsService {
+  private readonly logger = new Logger(UploadsService.name);
+
   constructor(private readonly configService: ConfigService) {}
 
   /**
@@ -60,5 +62,42 @@ export class UploadsService {
 
     const appUrl = this.configService.get<AppConfig>('app')!.appUrl;
     return { url: `${appUrl.replace(/\/$/, '')}/uploads/${folder}/${filename}` };
+  }
+
+  /**
+   * Best-effort delete of a previously-uploaded file, given its public URL.
+   * Silently ignores anything that isn't one of our own local uploads (e.g.
+   * seed/placeholder URLs) and already-missing files, so callers can pass any
+   * stored image URL — old or new, ours or not — without checking first.
+   */
+  async deleteByUrl(url: string | null | undefined): Promise<void> {
+    if (!url) return;
+
+    const appUrl = this.configService.get<AppConfig>('app')!.appUrl.replace(/\/$/, '');
+    const prefix = `${appUrl}/uploads/`;
+    if (!url.startsWith(prefix)) return;
+
+    const [folder, filename, ...rest] = url.slice(prefix.length).split('/');
+    if (
+      !folder ||
+      !filename ||
+      rest.length > 0 ||
+      !ALLOWED_UPLOAD_FOLDERS.includes(folder as UploadFolder)
+    ) {
+      return;
+    }
+
+    const filePath = join(process.cwd(), 'uploads', folder, filename);
+    try {
+      await unlink(filePath);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        this.logger.warn(`Failed to delete upload at ${filePath}: ${(error as Error).message}`);
+      }
+    }
+  }
+
+  async deleteManyByUrls(urls: Array<string | null | undefined>): Promise<void> {
+    await Promise.all(urls.map((url) => this.deleteByUrl(url)));
   }
 }

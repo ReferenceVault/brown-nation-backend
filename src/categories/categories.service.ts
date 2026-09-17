@@ -3,13 +3,17 @@ import { Category, Prisma } from '@prisma/client';
 
 import { slugify } from '../common/utils/slugify.util';
 import { PrismaService } from '../database/prisma.service';
+import { UploadsService } from '../uploads/uploads.service';
 import { CategoryQueryDto } from './dto/category-query.dto';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 
 @Injectable()
 export class CategoriesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly uploadsService: UploadsService,
+  ) {}
 
   async create(dto: CreateCategoryDto): Promise<Category> {
     const slug = await this.resolveUniqueSlug(dto.slug ?? dto.name);
@@ -58,11 +62,11 @@ export class CategoriesService {
   }
 
   async update(id: string, dto: UpdateCategoryDto): Promise<Category> {
-    await this.findOne(id);
+    const existing = await this.findOne(id);
 
     const slug = dto.slug ? await this.resolveUniqueSlug(dto.slug, id) : undefined;
 
-    return this.prisma.category.update({
+    const updated = await this.prisma.category.update({
       where: { id },
       data: {
         name: dto.name,
@@ -73,11 +77,18 @@ export class CategoriesService {
         order: dto.order,
       },
     });
+
+    if (existing.image && existing.image !== updated.image) {
+      await this.uploadsService.deleteByUrl(existing.image);
+    }
+
+    return updated;
   }
 
   async remove(id: string): Promise<void> {
-    await this.findOne(id);
+    const existing = await this.findOne(id);
     await this.prisma.category.delete({ where: { id } });
+    await this.uploadsService.deleteByUrl(existing.image);
   }
 
   private async resolveUniqueSlug(source: string, excludeId?: string): Promise<string> {

@@ -2,13 +2,17 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { HeroSlide, Prisma } from '@prisma/client';
 
 import { PrismaService } from '../database/prisma.service';
+import { UploadsService } from '../uploads/uploads.service';
 import { CreateHeroSlideDto } from './dto/create-hero-slide.dto';
 import { HeroSlideQueryDto } from './dto/hero-slide-query.dto';
 import { UpdateHeroSlideDto } from './dto/update-hero-slide.dto';
 
 @Injectable()
 export class HeroSlidesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly uploadsService: UploadsService,
+  ) {}
 
   async create(dto: CreateHeroSlideDto): Promise<HeroSlide> {
     return this.prisma.heroSlide.create({ data: dto });
@@ -41,12 +45,19 @@ export class HeroSlidesService {
   }
 
   async update(id: string, dto: UpdateHeroSlideDto): Promise<HeroSlide> {
-    await this.findOne(id);
-    return this.prisma.heroSlide.update({ where: { id }, data: dto });
+    const existing = await this.findOne(id);
+    const updated = await this.prisma.heroSlide.update({ where: { id }, data: dto });
+
+    if (existing.image !== updated.image) {
+      await this.uploadsService.deleteByUrl(existing.image);
+    }
+
+    return updated;
   }
 
   async remove(id: string): Promise<void> {
-    await this.findOne(id);
+    const existing = await this.findOne(id);
     await this.prisma.heroSlide.delete({ where: { id } });
+    await this.uploadsService.deleteByUrl(existing.image);
   }
 }

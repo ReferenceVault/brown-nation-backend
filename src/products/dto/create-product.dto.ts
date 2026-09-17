@@ -30,6 +30,11 @@ export class ProductVariantInputDto {
   @IsNumber({ maxDecimalPlaces: 2 })
   @IsPositive()
   price: number;
+
+  @ApiPropertyOptional({ description: 'Image shown when this cavity option is selected' })
+  @IsOptional()
+  @IsUrl({ require_tld: false })
+  image?: string;
 }
 
 export class CreateProductDto {
