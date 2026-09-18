@@ -44,6 +44,9 @@ const ORDER_INCLUDE = {
 
 const ORDER_LIST_INCLUDE = {
   user: { select: ORDER_USER_SELECT },
+  // Only the quantity, not the full item (no product join) — the list view
+  // just needs an item count, and the detail endpoint covers everything else.
+  items: { select: { quantity: true } },
 } satisfies Prisma.OrderInclude;
 
 type OrderWithDetails = Prisma.OrderGetPayload<{ include: typeof ORDER_INCLUDE }>;
