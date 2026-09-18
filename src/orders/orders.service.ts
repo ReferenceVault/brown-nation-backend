@@ -318,8 +318,11 @@ export class OrdersService {
 
     // Only DELIVERED emails invite a rating, and only for items whose product
     // still exists (rating happens from the order page, keyed by productId).
+    // Rating itself requires a verified (SUCCESS-paid) purchase — see
+    // ratings.service.ts hasPurchased — so skip the invite entirely for a
+    // delivered-but-unpaid order; there'd be nothing to rate on the other end.
     const deliveredItems: { productName: string }[] | undefined =
-      status === OrderStatus.DELIVERED
+      status === OrderStatus.DELIVERED && order.paymentStatus === PaymentStatus.SUCCESS
         ? order.items
             .filter((item) => item.productId !== null)
             .map((item) => ({ productName: item.productName }))
