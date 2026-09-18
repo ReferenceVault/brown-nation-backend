@@ -116,6 +116,7 @@ model User {
   orders                  Order[]
   passwordResetTokens     PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
+  productRatings          ProductRating[]
 
   @@index([role])
   @@map("users")
@@ -181,6 +182,8 @@ model Product {
   stockQuantity  Int           @default(0)
   isBestSeller   Boolean       @default(false)
   minOrderQuantity Int         @default(1)
+  averageRating  Float         @default(0)
+  ratingCount    Int           @default(0)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
@@ -189,11 +192,28 @@ model Product {
   orderItems    OrderItem[]
   inventoryLogs InventoryLog[]
   variants      ProductVariant[]
+  ratings       ProductRating[]
 
   @@index([categoryId])
   @@index([status])
   @@index([name])
   @@map("products")
+}
+
+model ProductRating {
+  id        String   @id @default(uuid())
+  productId String
+  userId    String
+  rating    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, userId])
+  @@index([productId])
+  @@map("product_ratings")
 }
 
 // Optional cavity-count pricing options for a product (e.g. 6/9/12/16 cavity

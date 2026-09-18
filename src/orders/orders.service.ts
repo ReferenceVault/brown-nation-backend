@@ -313,6 +313,29 @@ export class OrdersService {
     const customerName =
       [order.user.firstName, order.user.lastName].filter(Boolean).join(' ') || 'there';
 
+    // Only DELIVERED emails invite a rating, so only bother resolving product
+    // slugs (a query the other statuses don't need) when it's that status.
+    let deliveredItems: { productName: string; slug: string }[] | undefined;
+    if (status === OrderStatus.DELIVERED) {
+      const productIds = [
+        ...new Set(order.items.map((item) => item.productId).filter((id) => id !== null)),
+      ];
+      const products = productIds.length
+        ? await this.prisma.product.findMany({
+            where: { id: { in: productIds } },
+            select: { id: true, slug: true },
+          })
+        : [];
+      const slugByProductId = new Map(products.map((p) => [p.id, p.slug]));
+
+      deliveredItems = order.items
+        .map((item) => {
+          const slug = item.productId ? slugByProductId.get(item.productId) : undefined;
+          return slug ? { productName: item.productName, slug } : null;
+        })
+        .filter((item) => item !== null);
+    }
+
     try {
       await this.emailService.sendOrderStatusUpdateEmail({
         orderId: order.id,
@@ -321,6 +344,7 @@ export class OrdersService {
         customerEmail: order.user.email,
         status,
         note,
+        deliveredItems,
       });
     } catch (error) {
       this.logger.error(`Failed to send status update email for order ${order.id}`, error as Error);
