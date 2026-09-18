@@ -49,12 +49,12 @@ export class ProductQueryDto extends PaginationQueryDto {
   maxPrice?: number;
 
   @ApiPropertyOptional({
-    enum: ['name', 'price', 'createdAt', 'stockQuantity'],
+    enum: ['name', 'price', 'createdAt', 'stockQuantity', 'averageRating'],
     default: 'createdAt',
   })
   @IsOptional()
-  @IsIn(['name', 'price', 'createdAt', 'stockQuantity'])
-  sortBy?: 'name' | 'price' | 'createdAt' | 'stockQuantity' = 'createdAt';
+  @IsIn(['name', 'price', 'createdAt', 'stockQuantity', 'averageRating'])
+  sortBy?: 'name' | 'price' | 'createdAt' | 'stockQuantity' | 'averageRating' = 'createdAt';
 
   @ApiPropertyOptional({ description: 'Filter to only best-seller products' })
   @IsOptional()

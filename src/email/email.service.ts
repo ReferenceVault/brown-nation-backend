@@ -211,15 +211,29 @@ ${renderButton(orderLink, 'Track Your Order')}
       ? `<div style="margin:0 0 20px;padding:12px 16px;background-color:${emailColors.brand50};border-radius:12px;font-size:14px;">${escapeHtml(order.note)}</div>`
       : '';
 
+    // Only the DELIVERED email invites a rating — every other status skips this entirely.
+    const ratingLinks = (order.deliveredItems ?? []).map((item) => ({
+      productName: item.productName,
+      url: `${this.frontendUrl}/product/${item.slug}#rate-this-product`,
+    }));
+    const ratingText = ratingLinks.length
+      ? `\n\nHow did you like this product? Rate your purchase:\n${ratingLinks.map((r) => `${r.productName}: ${r.url}`).join('\n')}`
+      : '';
+    const ratingHtml = ratingLinks.length
+      ? `<p style="margin:24px 0 4px;font-size:15px;font-weight:bold;color:${emailColors.espresso};">How did you like this product?</p>
+${ratingLinks.map((r) => renderButton(r.url, `Rate ${escapeHtml(r.productName)}`)).join('')}`
+      : '';
+
     await this.provider.send({
       to: order.customerEmail,
       subject: `${copy.subject} — #${order.orderNumber}`,
-      text: `Hi ${order.customerName},\n\n${copy.text(order.orderNumber)}${noteText}\n\nView your order: ${orderLink}\n\nThanks for choosing Brown Nation!`,
+      text: `Hi ${order.customerName},\n\n${copy.text(order.orderNumber)}${noteText}\n\nView your order: ${orderLink}${ratingText}\n\nThanks for choosing Brown Nation!`,
       html: this.layout(
         `${copy.subject} — #${order.orderNumber}`,
         `<p style="margin:0 0 16px;font-size:16px;font-weight:bold;color:${emailColors.espresso};">Hi ${escapeHtml(order.customerName)},</p>
 <p style="margin:0 0 20px;">${copy.html(order.orderNumber)}</p>
 ${noteHtml}${renderButton(orderLink, 'View Your Order')}
+${ratingHtml}
 <p style="margin:16px 0 0;">Thanks for choosing Brown Nation!</p>`,
       ),
     });
@@ -243,6 +257,8 @@ type OrderStatusEmailDetails = {
   customerEmail: string;
   status: OrderStatus;
   note?: string;
+  /** Only populated (by the caller) for DELIVERED — invites a rating per item. */
+  deliveredItems?: { productName: string; slug: string }[];
 };
 
 const ORDER_STATUS_EMAIL_COPY: Partial<
