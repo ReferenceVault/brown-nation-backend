@@ -214,12 +214,13 @@ ${renderButton(orderLink, 'Track Your Order')}
     // Only the DELIVERED email invites a rating — every other status skips this entirely.
     // Rating happens from the order page itself, so every item points at the same link.
     const ratableItems = order.deliveredItems ?? [];
-    const ratingPrompt = ratableItems.length > 1 ? 'these products' : 'this product';
+    const ratingPromptText = joinNaturally(ratableItems.map((item) => item.productName));
+    const ratingPromptHtml = joinNaturally(ratableItems.map((item) => escapeHtml(item.productName)));
     const ratingText = ratableItems.length
-      ? `\n\nHow did you like ${ratingPrompt}? Rate your purchase: ${orderLink}`
+      ? `\n\nHow did you like ${ratingPromptText}? Rate your purchase: ${orderLink}`
       : '';
     const ratingHtml = ratableItems.length
-      ? `<p style="margin:24px 0 4px;font-size:15px;font-weight:bold;color:${emailColors.espresso};">How did you like ${ratingPrompt}?</p>
+      ? `<p style="margin:24px 0 4px;font-size:15px;font-weight:bold;color:${emailColors.espresso};">How did you like ${ratingPromptHtml}?</p>
 ${renderButton(orderLink, 'Rate Your Purchase')}`
       : '';
 
@@ -300,4 +301,11 @@ const ORDER_STATUS_EMAIL_COPY: Partial<
 function formatMoney(amount: string, currency: string): string {
   const formatted = Number(amount).toFixed(2);
   return currency === 'INR' ? `₹${formatted}` : `${currency} ${formatted}`;
+}
+
+/** "A" / "A and B" / "A, B and C" — for naming the delivered products in the rating prompt. */
+function joinNaturally(items: string[]): string {
+  if (items.length === 0) return '';
+  if (items.length === 1) return items[0];
+  return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
 }
