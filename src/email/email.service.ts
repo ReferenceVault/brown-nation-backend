@@ -212,16 +212,15 @@ ${renderButton(orderLink, 'Track Your Order')}
       : '';
 
     // Only the DELIVERED email invites a rating — every other status skips this entirely.
-    const ratingLinks = (order.deliveredItems ?? []).map((item) => ({
-      productName: item.productName,
-      url: `${this.frontendUrl}/product/${item.slug}#rate-this-product`,
-    }));
-    const ratingText = ratingLinks.length
-      ? `\n\nHow did you like this product? Rate your purchase:\n${ratingLinks.map((r) => `${r.productName}: ${r.url}`).join('\n')}`
+    // Rating happens from the order page itself, so every item points at the same link.
+    const ratableItems = order.deliveredItems ?? [];
+    const ratingPrompt = ratableItems.length > 1 ? 'these products' : 'this product';
+    const ratingText = ratableItems.length
+      ? `\n\nHow did you like ${ratingPrompt}? Rate your purchase: ${orderLink}`
       : '';
-    const ratingHtml = ratingLinks.length
-      ? `<p style="margin:24px 0 4px;font-size:15px;font-weight:bold;color:${emailColors.espresso};">How did you like this product?</p>
-${ratingLinks.map((r) => renderButton(r.url, `Rate ${escapeHtml(r.productName)}`)).join('')}`
+    const ratingHtml = ratableItems.length
+      ? `<p style="margin:24px 0 4px;font-size:15px;font-weight:bold;color:${emailColors.espresso};">How did you like ${ratingPrompt}?</p>
+${renderButton(orderLink, 'Rate Your Purchase')}`
       : '';
 
     await this.provider.send({
@@ -257,8 +256,8 @@ type OrderStatusEmailDetails = {
   customerEmail: string;
   status: OrderStatus;
   note?: string;
-  /** Only populated (by the caller) for DELIVERED — invites a rating per item. */
-  deliveredItems?: { productName: string; slug: string }[];
+  /** Only populated (by the caller) for DELIVERED — a non-empty list invites a rating. */
+  deliveredItems?: { productName: string }[];
 };
 
 const ORDER_STATUS_EMAIL_COPY: Partial<

@@ -37,7 +37,7 @@ const ORDER_USER_SELECT = {
 } satisfies Prisma.UserSelect;
 
 const ORDER_INCLUDE = {
-  items: true,
+  items: { include: { product: { select: { images: true, slug: true } } } },
   statusHistory: { orderBy: { createdAt: 'asc' } as const },
   user: { select: ORDER_USER_SELECT },
 } satisfies Prisma.OrderInclude;
@@ -313,28 +313,14 @@ export class OrdersService {
     const customerName =
       [order.user.firstName, order.user.lastName].filter(Boolean).join(' ') || 'there';
 
-    // Only DELIVERED emails invite a rating, so only bother resolving product
-    // slugs (a query the other statuses don't need) when it's that status.
-    let deliveredItems: { productName: string; slug: string }[] | undefined;
-    if (status === OrderStatus.DELIVERED) {
-      const productIds = [
-        ...new Set(order.items.map((item) => item.productId).filter((id) => id !== null)),
-      ];
-      const products = productIds.length
-        ? await this.prisma.product.findMany({
-            where: { id: { in: productIds } },
-            select: { id: true, slug: true },
-          })
-        : [];
-      const slugByProductId = new Map(products.map((p) => [p.id, p.slug]));
-
-      deliveredItems = order.items
-        .map((item) => {
-          const slug = item.productId ? slugByProductId.get(item.productId) : undefined;
-          return slug ? { productName: item.productName, slug } : null;
-        })
-        .filter((item) => item !== null);
-    }
+    // Only DELIVERED emails invite a rating, and only for items whose product
+    // still exists (rating happens from the order page, keyed by productId).
+    const deliveredItems: { productName: string }[] | undefined =
+      status === OrderStatus.DELIVERED
+        ? order.items
+            .filter((item) => item.productId !== null)
+            .map((item) => ({ productName: item.productName }))
+        : undefined;
 
     try {
       await this.emailService.sendOrderStatusUpdateEmail({
