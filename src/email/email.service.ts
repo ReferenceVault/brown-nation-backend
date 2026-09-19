@@ -206,22 +206,25 @@ ${renderButton(orderLink, 'Track Your Order')}
     if (!copy) return;
 
     const orderLink = `${this.frontendUrl}/account/orders/${order.orderId}`;
+    // Jumps straight to the rating section (see OrderRatingSection's
+    // RATE_SECTION_ANCHOR) instead of leaving the customer to scroll for it —
+    // works whether they're already logged in or land there after logging in.
+    const ratingLink = `${orderLink}#rate-your-products`;
     const noteText = order.note ? `\n\nNote: ${order.note}` : '';
     const noteHtml = order.note
       ? `<div style="margin:0 0 20px;padding:12px 16px;background-color:${emailColors.brand50};border-radius:12px;font-size:14px;">${escapeHtml(order.note)}</div>`
       : '';
 
     // Only the DELIVERED email invites a rating — every other status skips this entirely.
-    // Rating happens from the order page itself, so every item points at the same link.
     const ratableItems = order.deliveredItems ?? [];
     const ratingPromptText = joinNaturally(ratableItems.map((item) => item.productName));
     const ratingPromptHtml = joinNaturally(ratableItems.map((item) => escapeHtml(item.productName)));
     const ratingText = ratableItems.length
-      ? `\n\nHow did you like ${ratingPromptText}? Rate your purchase: ${orderLink}`
+      ? `\n\nHow did you like ${ratingPromptText}? Rate your purchase: ${ratingLink}`
       : '';
     const ratingHtml = ratableItems.length
       ? `<p style="margin:24px 0 4px;font-size:15px;font-weight:bold;color:${emailColors.espresso};">How did you like ${ratingPromptHtml}?</p>
-${renderButton(orderLink, 'Rate Your Purchase')}`
+${renderButton(ratingLink, 'Rate Your Purchase')}`
       : '';
 
     await this.provider.send({
