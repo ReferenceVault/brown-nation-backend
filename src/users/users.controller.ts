@@ -16,6 +16,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { buildPaginatedResult } from '../common/utils/pagination.util';
 import { AuthenticatedUser } from '../common/types/auth.types';
+import { AdminSetPasswordDto } from './dto/admin-set-password.dto';
 import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
 import { DeleteUserQueryDto } from './dto/delete-user-query.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -63,10 +64,32 @@ export class UsersController {
     @CurrentUser() admin: AuthenticatedUser,
     @Body() dto: AdminUpdateUserDto,
   ) {
-    if (id === admin.id && (dto.role || dto.status)) {
-      throw new BadRequestException('Admins cannot change their own role or status');
+    const isNoOp = !dto.role && !dto.status && !dto.firstName && !dto.lastName && !dto.email && !dto.phone;
+    if (id === admin.id && !isNoOp) {
+      throw new BadRequestException(
+        'Admins cannot edit their own account here — use your profile settings instead',
+      );
     }
     return this.usersService.updateAdmin(id, dto);
+  }
+
+  @Patch(':id/password')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: "Set a user's password directly (admin only) — ends their other sessions",
+  })
+  async setPassword(
+    @Param('id') id: string,
+    @CurrentUser() admin: AuthenticatedUser,
+    @Body() dto: AdminSetPasswordDto,
+  ) {
+    if (id === admin.id) {
+      throw new BadRequestException(
+        'Admins cannot reset their own password here — use your account settings instead',
+      );
+    }
+    await this.usersService.setPasswordAdmin(id, dto.password);
+    return { message: 'Password updated successfully' };
   }
 
   @Delete(':id')

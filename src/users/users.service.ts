@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, User, UserRole, UserStatus } from '@prisma/client';
+import * as argon2 from 'argon2';
 
 import { PrismaService } from '../database/prisma.service';
 
@@ -93,11 +94,21 @@ export class UsersService {
     });
   }
 
-  async updateAdmin(id: string, data: { role?: UserRole; status?: UserStatus }): Promise<SafeUser> {
+  async updateAdmin(
+    id: string,
+    data: {
+      role?: UserRole;
+      status?: UserStatus;
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+      phone?: string;
+    },
+  ): Promise<SafeUser> {
     await this.findSafeById(id);
     return this.prisma.user.update({
       where: { id },
-      data,
+      data: { ...data, ...(data.email ? { email: data.email.toLowerCase().trim() } : {}) },
       select: SAFE_USER_SELECT,
     });
   }
@@ -133,6 +144,13 @@ export class UsersService {
       where: { id },
       data: { passwordHash, refreshTokenHash: null },
     });
+  }
+
+  /** Sets a user's password directly (admin only, no current password needed) — clears refreshTokenHash, ending their other sessions same as a normal password change. */
+  async setPasswordAdmin(id: string, password: string): Promise<void> {
+    await this.findSafeById(id);
+    const passwordHash = await argon2.hash(password, { type: argon2.argon2id });
+    await this.updatePasswordHash(id, passwordHash);
   }
 
   async markEmailVerified(id: string): Promise<void> {
