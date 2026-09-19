@@ -133,6 +133,49 @@ export class AuthService {
     await this.usersService.setRefreshTokenHash(userId, null);
   }
 
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
+    const user = await this.usersService.findByIdWithCredentials(userId);
+    if (!user || !(await argon2.verify(user.passwordHash, currentPassword))) {
+      throw new AppException(
+        ErrorCode.INVALID_CREDENTIALS,
+        'Current password is incorrect',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    const passwordHash = await argon2.hash(newPassword, { type: argon2.argon2id });
+    await this.usersService.updatePasswordHash(userId, passwordHash);
+    this.logger.log(`Password changed for user: ${userId}`);
+  }
+
+  /** Resets verification and re-sends the verify link — the old email's verified status shouldn't carry over to an unconfirmed new one. */
+  async changeEmail(userId: string, newEmail: string): Promise<SafeUser> {
+    const normalized = newEmail.toLowerCase().trim();
+
+    const existing = await this.usersService.findByEmailWithCredentials(normalized);
+    if (existing && existing.id !== userId) {
+      throw new AppException(
+        ErrorCode.EMAIL_ALREADY_EXISTS,
+        'An account with this email already exists',
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { email: normalized, isEmailVerified: false },
+    });
+
+    await this.sendVerificationEmail(userId, normalized);
+    this.logger.log(`Email changed for user: ${userId}`);
+
+    return this.toSafeUser(updated);
+  }
+
   async forgotPassword(email: string): Promise<void> {
     const user = await this.usersService.findByEmailWithCredentials(email);
 

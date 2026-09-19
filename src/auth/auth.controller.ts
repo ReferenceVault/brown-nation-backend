@@ -1,10 +1,12 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Get } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Patch, Post, Get } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
 import { AuthService } from './auth.service';
+import { ChangeEmailDto } from './dto/change-email.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -109,5 +111,24 @@ export class AuthController {
   @ApiOperation({ summary: 'Get the authenticated user profile' })
   async me(@CurrentUser('id') userId: string) {
     return this.usersService.findSafeById(userId);
+  }
+
+  @ApiBearerAuth('access-token')
+  @HttpCode(HttpStatus.OK)
+  @Patch('change-password')
+  @ApiOperation({ summary: "Change the authenticated user's password (requires current password)" })
+  async changePassword(@CurrentUser('id') userId: string, @Body() dto: ChangePasswordDto) {
+    await this.authService.changePassword(userId, dto.currentPassword, dto.newPassword);
+    return { message: 'Password changed successfully' };
+  }
+
+  @ApiBearerAuth('access-token')
+  @HttpCode(HttpStatus.OK)
+  @Patch('change-email')
+  @ApiOperation({
+    summary: "Change the authenticated user's email (resets verification and resends the link)",
+  })
+  async changeEmail(@CurrentUser('id') userId: string, @Body() dto: ChangeEmailDto) {
+    return this.authService.changeEmail(userId, dto.email);
   }
 }
