@@ -206,8 +206,13 @@ export class OrdersService {
     requester: { id: string; role: UserRole },
     query: OrderQueryDto,
   ): Promise<{ items: OrderListItem[]; total: number }> {
+    // An admin gets every order by default (the admin management list), but
+    // `mine` forces scoping to their own — the customer-facing "My Orders"
+    // page always sets it, so an admin's personal order history never shows
+    // the whole system's orders just because of their role.
+    const scopeToSelf = requester.role !== UserRole.ADMIN || query.mine === true;
     const where: Prisma.OrderWhereInput = {
-      ...(requester.role === UserRole.ADMIN ? {} : { userId: requester.id }),
+      ...(scopeToSelf ? { userId: requester.id } : {}),
       ...(query.status ? { status: query.status } : {}),
     };
 
