@@ -137,6 +137,19 @@ export class CreateProductDto {
   isBestSeller?: boolean;
 
   @ApiPropertyOptional({
+    default: true,
+    description:
+      'Whether the plain base product ("Bar") is itself purchasable alongside any Cavity/Hamper variants',
+  })
+  @IsOptional()
+  @Transform(
+    ({ obj }: { obj: Record<string, unknown> }) =>
+      obj.sellsBar === undefined ? undefined : obj.sellsBar === true || obj.sellsBar === 'true',
+  )
+  @IsBoolean()
+  sellsBar?: boolean;
+
+  @ApiPropertyOptional({
     example: 1,
     default: 1,
     description: 'Minimum quantity a customer can order',

@@ -181,6 +181,10 @@ model Product {
   status         ProductStatus @default(DRAFT)
   stockQuantity  Int           @default(0)
   isBestSeller   Boolean       @default(false)
+  // Whether the plain base product ("Bar") is itself a purchasable option
+  // alongside any Cavity/Hamper variants. False when a product should only
+  // be sold via its variants (e.g. hamper-only products).
+  sellsBar       Boolean       @default(true)
   minOrderQuantity Int         @default(1)
   averageRating  Float         @default(0)
   ratingCount    Int           @default(0)

@@ -50,6 +50,7 @@ export class ProductsService {
           status: dto.status ?? ProductStatus.DRAFT,
           stockQuantity: dto.stockQuantity ?? 0,
           isBestSeller: dto.isBestSeller ?? false,
+          sellsBar: dto.sellsBar ?? true,
           minOrderQuantity: dto.minOrderQuantity ?? 1,
           variants: dto.variants?.length
             ? {
@@ -171,6 +172,7 @@ export class ProductsService {
           status: dto.status,
           stockQuantity: dto.stockQuantity,
           isBestSeller: dto.isBestSeller,
+          sellsBar: dto.sellsBar,
           minOrderQuantity: dto.minOrderQuantity,
           variants: dto.variants
             ? {
