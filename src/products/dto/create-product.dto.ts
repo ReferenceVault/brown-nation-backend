@@ -74,9 +74,14 @@ export class CreateProductDto {
   @MaxLength(5000)
   description: string;
 
-  @ApiProperty({ example: 499.0 })
+  @ApiProperty({
+    example: 499.0,
+    description:
+      'Base "Bar" price — only required to be positive when sellsBar is true, or when the product has no variants at all',
+  })
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
+  @ValidateIf((o: CreateProductDto) => o.sellsBar !== false || !o.variants?.length)
   @IsPositive()
   price: number;
 
@@ -142,9 +147,8 @@ export class CreateProductDto {
       'Whether the plain base product ("Bar") is itself purchasable alongside any Cavity/Hamper variants',
   })
   @IsOptional()
-  @Transform(
-    ({ obj }: { obj: Record<string, unknown> }) =>
-      obj.sellsBar === undefined ? undefined : obj.sellsBar === true || obj.sellsBar === 'true',
+  @Transform(({ obj }: { obj: Record<string, unknown> }) =>
+    obj.sellsBar === undefined ? undefined : obj.sellsBar === true || obj.sellsBar === 'true',
   )
   @IsBoolean()
   sellsBar?: boolean;
