@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ProductStatus } from '@prisma/client';
+import { ProductStatus, VariantKind } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
 import {
   ArrayMaxSize,
@@ -15,15 +15,35 @@ import {
   IsUrl,
   Min,
   MaxLength,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 
 export class ProductVariantInputDto {
-  @ApiProperty({ example: 6, description: 'Cavity count for this pricing option' })
+  @ApiPropertyOptional({
+    enum: VariantKind,
+    default: VariantKind.CAVITY,
+    description: 'CAVITY = numbered box size (cavityCount); HAMPER = named gift option (label)',
+  })
+  @IsOptional()
+  @IsEnum(VariantKind)
+  kind?: VariantKind = VariantKind.CAVITY;
+
+  @ApiPropertyOptional({ example: 6, description: 'Cavity count — required when kind is CAVITY' })
+  @ValidateIf((o: ProductVariantInputDto) => (o.kind ?? VariantKind.CAVITY) === VariantKind.CAVITY)
   @Type(() => Number)
   @IsInt()
   @IsPositive()
-  cavityCount: number;
+  cavityCount?: number;
+
+  @ApiPropertyOptional({
+    example: 'Festive Hamper',
+    description: 'Hamper name — required when kind is HAMPER',
+  })
+  @ValidateIf((o: ProductVariantInputDto) => o.kind === VariantKind.HAMPER)
+  @IsString()
+  @MaxLength(100)
+  label?: string;
 
   @ApiProperty({ example: 129.0 })
   @Type(() => Number)
@@ -31,7 +51,7 @@ export class ProductVariantInputDto {
   @IsPositive()
   price: number;
 
-  @ApiPropertyOptional({ description: 'Image shown when this cavity option is selected' })
+  @ApiPropertyOptional({ description: 'Image shown when this option is selected' })
   @IsOptional()
   @IsUrl({ require_tld: false })
   image?: string;
@@ -130,7 +150,7 @@ export class CreateProductDto {
   @ApiPropertyOptional({
     type: [ProductVariantInputDto],
     description:
-      'Cavity-based pricing options (e.g. 6/9/12/16 cavity boxes of this flavor), each at its own price',
+      'Pricing options: cavity boxes (e.g. 6/9/12/16 cavity) and/or named hamper options, each at its own price',
   })
   @IsOptional()
   @IsArray()

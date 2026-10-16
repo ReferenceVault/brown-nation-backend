@@ -22,6 +22,7 @@ import { CouponsService } from '../coupons/coupons.service';
 import { PrismaService } from '../database/prisma.service';
 import { EmailService } from '../email/email.service';
 import { InventoryService } from '../inventory/inventory.service';
+import { variantLabel } from '../products/utils/variant-label.util';
 import { ShippingSettingsService } from '../shipping-settings/shipping-settings.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderQueryDto } from './dto/order-query.dto';
@@ -115,7 +116,7 @@ export class OrdersService {
             productId: product.id,
             productName: product.name,
             sku: product.sku,
-            variantLabel: variant ? `${variant.cavityCount} Cavity` : undefined,
+            variantLabel: variant ? variantLabel(variant) : undefined,
             unitPrice,
             quantity: cartItem.quantity,
             totalPrice: lineTotal,

@@ -7,7 +7,9 @@ export class AddCartItemDto {
   @IsUUID()
   productId: string;
 
-  @ApiPropertyOptional({ description: 'Selected cavity pricing option, if the product has any' })
+  @ApiPropertyOptional({
+    description: 'Selected variant (cavity box or hamper), if the product has any',
+  })
   @IsOptional()
   @IsUUID()
   variantId?: string;

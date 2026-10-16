@@ -11,7 +11,7 @@ import { ProductQueryDto } from './dto/product-query.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
 const PRODUCT_INCLUDE = {
-  variants: { orderBy: { cavityCount: 'asc' as const } },
+  variants: { orderBy: [{ kind: 'asc' as const }, { cavityCount: 'asc' as const }] },
 } satisfies Prisma.ProductInclude;
 
 type ProductWithVariants = Prisma.ProductGetPayload<{ include: typeof PRODUCT_INCLUDE }>;
@@ -54,7 +54,9 @@ export class ProductsService {
           variants: dto.variants?.length
             ? {
                 create: dto.variants.map((v) => ({
+                  kind: v.kind,
                   cavityCount: v.cavityCount,
+                  label: v.label,
                   price: v.price,
                   image: v.image,
                 })),
@@ -174,7 +176,9 @@ export class ProductsService {
             ? {
                 deleteMany: {},
                 create: dto.variants.map((v) => ({
+                  kind: v.kind,
                   cavityCount: v.cavityCount,
+                  label: v.label,
                   price: v.price,
                   image: v.image,
                 })),

@@ -4,6 +4,7 @@ import { Cart, CartItem, Prisma, Product, ProductStatus, ProductVariant } from '
 import { ErrorCode } from '../common/constants/error-codes.constant';
 import { AppException } from '../common/exceptions/app.exception';
 import { PrismaService } from '../database/prisma.service';
+import { variantLabel } from '../products/utils/variant-label.util';
 
 type CartWithItems = Cart & {
   items: (CartItem & { product: Product; variant: ProductVariant | null })[];
@@ -165,7 +166,7 @@ export class CartService {
     if (!variant || variant.productId !== productId) {
       throw new AppException(
         ErrorCode.NOT_FOUND,
-        'Selected cavity option is not available for this product',
+        'Selected variant is not available for this product',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -180,7 +181,7 @@ export class CartService {
       id: item.id,
       productId: item.productId,
       variantId: item.variantId,
-      variantLabel: item.variant ? `${item.variant.cavityCount} Cavity` : null,
+      variantLabel: item.variant ? variantLabel(item.variant) : null,
       name: item.product.name,
       slug: item.product.slug,
       image: item.product.images[0] ?? null,

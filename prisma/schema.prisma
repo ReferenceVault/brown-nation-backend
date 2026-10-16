@@ -216,21 +216,30 @@ model ProductRating {
   @@map("product_ratings")
 }
 
-// Optional cavity-count pricing options for a product (e.g. 6/9/12/16 cavity
-// boxes of the same flavor, each at its own price).
+enum VariantKind {
+  CAVITY
+  HAMPER
+}
+
+// Optional pricing options for a product: cavity-count boxes (e.g. 6/9/12/16
+// cavity boxes of the same flavor) or named hamper options — each at its own
+// price. CAVITY variants carry cavityCount; HAMPER variants carry label.
 model ProductVariant {
-  id          String   @id @default(uuid())
+  id          String      @id @default(uuid())
   productId   String
-  cavityCount Int
-  price       Decimal  @db.Decimal(10, 2)
+  kind        VariantKind @default(CAVITY)
+  cavityCount Int?
+  label       String?
+  price       Decimal     @db.Decimal(10, 2)
   image       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
   product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
   cartItems CartItem[]
 
-  @@unique([productId, cavityCount])
+  @@unique([productId, kind, cavityCount])
+  @@unique([productId, kind, label])
   @@index([productId])
   @@map("product_variants")
 }
