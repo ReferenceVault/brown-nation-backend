@@ -74,9 +74,14 @@ export class CreateProductDto {
   @MaxLength(5000)
   description: string;
 
-  @ApiProperty({ example: 499.0 })
+  @ApiProperty({
+    example: 499.0,
+    description:
+      'Base "Bar" price — only required to be positive when the product has no Cavity/Hamper options at all; 0 means Bar isn\'t offered as a purchase option',
+  })
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
+  @ValidateIf((o: CreateProductDto) => !o.variants?.length)
   @IsPositive()
   price: number;
 

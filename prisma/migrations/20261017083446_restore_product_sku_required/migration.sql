@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "products" ALTER COLUMN "sku" SET NOT NULL;
